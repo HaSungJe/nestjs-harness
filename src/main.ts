@@ -77,7 +77,7 @@ async function bootstrap() {
     // API Swagger 링크생성
     const isSwaggerTargetSelect: boolean = 'T' === process?.env?.SWAGGER_TARGET_SELECT ? true : false;
     const swagger_targets: string[] = process?.env?.SWAGGER_TARGET ? process?.env?.SWAGGER_TARGET?.toString()?.split(',') : [];
-    const swagger_path = process.env.SWAGGER_PATH ? process.env.SWAGGER_PATH : 'api-docs';
+    const swagger_path = process.env.SWAGGER_PATH ? process.env.SWAGGER_PATH : 'swagger';
     const jqueryCDN = `https://code.jquery.com/jquery-3.7.1.slim.js`;
     if (isSwaggerTargetSelect) {
         let selectBoxHtml = ``;

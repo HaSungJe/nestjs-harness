@@ -1,6 +1,6 @@
 import { AdminUserListDto, AdminUserListItemDto } from "../dto/admin.list.dto";
 import { AdminUserViewItemDto } from "../dto/admin.view.dto";
-import { FindManyOptions } from "typeorm";
+import { FindManyOptions, FindOptionsWhere } from "typeorm";
 import { UserEntity } from "../../entities/user.entity";
 import { PaginationResultDto } from "@root/common/dto/pagination.dto";
 
@@ -36,4 +36,12 @@ export interface AdminUserRepositoryInterface {
      * @returns
      */
     sign(user: UserEntity): Promise<void>;
+
+    /**
+     * 회원 정보 업데이트
+     *
+     * @param where
+     * @param entity
+     */
+    update(where: FindOptionsWhere<UserEntity>, entity: UserEntity): Promise<void>;
 }

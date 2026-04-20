@@ -1,9 +1,11 @@
 import type { AdminUserRepositoryInterface } from "./interfaces/admin.user.repository.interface";
 import { ADMIN_USER_REPOSITORY } from "../user.symbols";
-import { HttpException, HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Not } from "typeorm";
 import { AdminUserListDto, AdminUserListResultDto } from "./dto/admin.list.dto";
 import { AdminSignDto } from "./dto/admin.sign.dto";
+import { AdminPatchPasswordDto } from "./dto/admin.patch-password.dto";
+import { AdminPatchNicknameDto } from "./dto/admin.patch-nickname.dto";
 import { AdminUserViewResultDto } from "./dto/admin.view.dto";
 import { ApiBadRequestResultDto, ApiFailResultDto, ValidationErrorDto } from "@root/common/dto/global.result.dto";
 import { UserEntity } from "../entities/user.entity";
@@ -64,6 +66,59 @@ export class AdminUserService {
             user.state_id = 'DONE';
             await this.adminUserRepository.sign(user);
         } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * 관리자 회원 비밀번호 변경
+     *
+     * @param dto
+     */
+    @UseQueue('user-consumer', 'admin-user-service-patch-password')
+    @Transactional()
+    async patchPassword(dto: AdminPatchPasswordDto): Promise<void> {
+        if (dto.new_login_pw !== dto.new_login_pw2) {
+            const message = '비밀번호가 일치하지 않습니다.';
+            const validationErrors = createValidationError('new_login_pw2', message);
+            throw new HttpException({ message, validationErrors }, HttpStatus.BAD_REQUEST);
+        }
+
+        const user = await this.adminUserRepository.findById(dto.user_id);
+        if (!user) {
+            throw new NotFoundException({ message: '존재하지 않는 회원입니다.' });
+        }
+
+        try {
+            const entity = new UserEntity();
+            entity.login_pw = await getBcrypt(dto.new_login_pw);
+            await this.adminUserRepository.update({ user_id: dto.user_id }, entity);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * 관리자 회원 닉네임 변경
+     *
+     * @param dto
+     */
+    @UseQueue('user-consumer', 'admin-user-service-patch-nickname')
+    @Transactional()
+    async patchNickname(dto: AdminPatchNicknameDto): Promise<void> {
+        const user = await this.adminUserRepository.findById(dto.user_id);
+        if (!user) {
+            throw new NotFoundException({ message: '존재하지 않는 회원입니다.' });
+        }
+
+        try {
+            const entity = new UserEntity();
+            entity.nickname = dto.new_nickname;
+            await this.adminUserRepository.update({ user_id: dto.user_id }, entity);
+        } catch (error) {
+            if (error.errno === 1062 && error.sqlMessage.indexOf('Unique_User_nickname') !== -1) {
+                throw new BadRequestException({ message: '이미 사용중인 닉네임입니다.' });
+            }
             throw error;
         }
     }

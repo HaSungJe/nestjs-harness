@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { FindManyOptions, Repository } from 'typeorm';
+import { FindManyOptions, FindOptionsWhere, Repository } from 'typeorm';
 import { UserEntity } from '../../entities/user.entity';
 import { AdminUserListDto, AdminUserListItemDto } from '../dto/admin.list.dto';
 import { AdminUserViewItemDto } from '../dto/admin.view.dto';
@@ -111,6 +111,20 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
             return builder.getRawOne<AdminUserViewItemDto>();
         } catch (error) {
             throw new InternalServerErrorException({message: '회원 정보 조회에 실패했습니다. 관리자에게 문의해주세요.'});
+        }
+    }
+
+    /**
+     * 회원 정보 업데이트
+     *
+     * @param where
+     * @param entity
+     */
+    async update(where: FindOptionsWhere<UserEntity>, entity: UserEntity): Promise<void> {
+        try {
+            await this.repository.update(where, entity);
+        } catch (error) {
+            throw error;
         }
     }
 
