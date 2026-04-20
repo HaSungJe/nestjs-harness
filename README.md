@@ -202,13 +202,14 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 | 단계 | 담당 | 작업 |
 |------|------|------|
 | ① | **사람** | 기능을 구두로 설명 |
-| ② | Claude | `request.md` 초안 작성 (`request.template.md` 기반) |
+| ② | Claude | `request.md` 초안 작성 |
 | ③ | **사람** | request 파일 보완 후 Claude에게 work 작성 지시 |
-| ④ | Claude | `work.md` 작성 + `work-review.md` 체크리스트 자가 검토 |
+| ④ | Claude | `work.md` 작성 → 저장 즉시 `validate-work.js` 자동 실행 (독립 검증) |
 | ⑤ | **사람** | work 파일 검토 후 Claude에게 구현 지시 |
 | ⑥ | Claude | 구현 코드 + `spec.ts` 동시 생성 |
-| ⑦ | Claude | `npm test` 실행 → 실패 시 에러 분석 후 수정 (최대 10회) |
+| ⑦ | Claude | 해당 기능 spec만 실행 → 실패 시 에러 분석 후 수정 (최대 10회) |
 | ⑧ | Claude | 리포트 생성 (`.harness/reports/<domain>/<feature>-report.md`) |
+| ⑨ | **사람** | `git commit` → Husky 전체 테스트 → `git push` → GitHub Actions 전체 테스트 |
 
 ### 사람이 해야 하는 일
 
@@ -216,7 +217,15 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 2. **request 파일 보완** — Claude가 작성한 초안에 세부 요구사항 추가 후 work 작성 지시
 3. **work 파일 검토** — Claude가 작성한 구현 계획 확인 후 구현 지시
 
-> Claude가 자동으로 처리하는 것: request 초안 / work 계획 / 체크리스트 검토 / 구현 / 테스트 / 수정 루프 / 리포트
+> Claude가 자동으로 처리하는 것: request 초안 / work 작성 + 독립 검증 / 구현 / 테스트 / 수정 루프 / 리포트
+
+### 품질 게이트
+
+| 시점 | 주체 | 내용 |
+|------|------|------|
+| work.md 저장 시 | `validate-work.js` | 필수 섹션 / 테스트케이스 / 타입 독립 검증 |
+| `git commit` 시 | Husky | 전체 `npm test` 실행, 실패 시 커밋 차단 |
+| `git push` 시 | GitHub Actions | 전체 `npm test` 실행, Husky 우회 시에도 차단 |
 
 ### 핵심 파일
 
@@ -230,8 +239,11 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 │   └── work/<domain>/                # 도메인별 구현 계획
 ├── specs/
 │   ├── request.schema.json           # Request 유효성 JSON Schema
-│   └── validate-request.js           # 검증 스크립트
-├── checklists/work-review.md         # work 자가 검토 체크리스트
+│   ├── validate-request.js           # request 파일 검증
+│   └── validate-work.js              # work 파일 독립 검증 (PostToolUse 훅 자동 실행)
+├── triggers/
+│   └── on-work-written.sh            # work Write 시 validate-work.js 실행
+├── checklists/work-review.md         # work 검토 체크리스트
 ├── reporters/work-summary.template.md
 └── reports/<domain>/                 # 완료 리포트 (자동 생성)
 ```

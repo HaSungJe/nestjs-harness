@@ -7,6 +7,7 @@ import { AdminSignDto } from "./dto/admin.sign.dto";
 import { AdminPatchPasswordDto } from "./dto/admin.patch-password.dto";
 import { AdminPatchNicknameDto } from "./dto/admin.patch-nickname.dto";
 import { AdminUserViewResultDto } from "./dto/admin.view.dto";
+
 import { ApiBadRequestResultDto, ApiFailResultDto, ValidationErrorDto } from "@root/common/dto/global.result.dto";
 import { UserEntity } from "../entities/user.entity";
 import { UseQueue } from "@root/modules/queue/use-queue.decorator";
@@ -119,6 +120,31 @@ export class AdminUserService {
             if (error.errno === 1062 && error.sqlMessage.indexOf('Unique_User_nickname') !== -1) {
                 throw new BadRequestException({ message: '이미 사용중인 닉네임입니다.' });
             }
+            throw error;
+        }
+    }
+
+    /**
+     * 관리자 회원 탈퇴처리
+     *
+     * @param user_id
+     */
+    @UseQueue('user-consumer', 'admin-user-service-withdraw')
+    @Transactional()
+    async withdraw(user_id: string): Promise<void> {
+        const user = await this.adminUserRepository.findById(user_id);
+        if (!user) {
+            throw new NotFoundException({ message: '존재하지 않는 회원입니다.' });
+        }
+        if (user.state_id === 'LEAVE') {
+            throw new HttpException({ message: '이미 탈퇴처리된 회원입니다.' }, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            const entity = new UserEntity();
+            entity.state_id = 'LEAVE';
+            await this.adminUserRepository.update({ user_id }, entity);
+        } catch (error) {
             throw error;
         }
     }

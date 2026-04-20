@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from "@nestjs/swagger";
 
 import { AdminUserService } from "./admin.user.service";
@@ -6,6 +6,7 @@ import { AdminUserListDto, AdminUserListResultDto } from "./dto/admin.list.dto";
 import { AdminSignDto } from "./dto/admin.sign.dto";
 import { AdminPatchPasswordDto } from "./dto/admin.patch-password.dto";
 import { AdminPatchNicknameDto } from "./dto/admin.patch-nickname.dto";
+import { AdminWithdrawParamDto } from "./dto/admin.withdraw.dto";
 import { AdminUserViewParamDto, AdminUserViewResultDto } from "./dto/admin.view.dto";
 import { ApiBadRequestResultDto, ApiFailResultDto } from "@root/common/dto/global.result.dto";
 import { PassportJwtAuthGuard } from "@root/guards/passport.jwt.auth/passport.jwt.auth.guard";
@@ -86,6 +87,29 @@ export class AdminUserController {
     async patchNickname(@Body() dto: AdminPatchNicknameDto): Promise<void | ApiBadRequestResultDto | ApiFailResultDto> {
         try {
             await this.service.patchNickname(dto);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * 관리자 회원 탈퇴처리
+     *
+     * @param param
+     */
+    @Delete('/:user_id')
+    @UseGuards(PassportJwtAuthGuard, RolesGuard)
+    @Roles('ADMIN, SUPER_ADMIN')
+    @ApiOperation({ summary: '관리자 회원 탈퇴처리' })
+    @ApiOkResponse()
+    @ApiBadRequestResponse({ type: ApiBadRequestResultDto })
+    @ApiUnauthorizedResponse({ type: ApiFailResultDto })
+    @ApiForbiddenResponse({ type: ApiFailResultDto })
+    @ApiNotFoundResponse({ type: ApiFailResultDto })
+    @ApiInternalServerErrorResponse({ type: ApiFailResultDto })
+    async withdraw(@Param() param: AdminWithdrawParamDto): Promise<void | ApiBadRequestResultDto | ApiFailResultDto> {
+        try {
+            await this.service.withdraw(param.user_id);
         } catch (error) {
             throw error;
         }
