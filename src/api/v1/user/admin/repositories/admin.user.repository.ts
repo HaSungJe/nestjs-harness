@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from '../../entities/user.entity';
-import { AdminUserListDto } from '../dto/list.dto';
-import { AdminUserListVO } from '../vo/list.vo';
+import { AdminUserListDto, AdminUserListItemDto } from '../dto/admin.list.dto';
+import { AdminUserViewItemDto } from '../dto/admin.view.dto';
 import { Pagination } from '@root/common/utils/pagination';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AdminUserRepositoryInterface } from '../interfaces/admin.user.repository.interface';
 import { PaginationResultDto } from '@root/common/dto/pagination.dto';
+import { ValidationErrorDto } from '@root/common/dto/global.result.dto';
+import { createValidationError } from '@root/common/utils/validation';
 
 @Injectable()
 export class AdminUserRepository implements AdminUserRepositoryInterface {
@@ -31,7 +33,7 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
      * @param dto 
      * @returns 
      */
-    async getUserList(dto: AdminUserListDto): Promise<{ list: Array<AdminUserListVO>, count: number, pagination: PaginationResultDto }> {
+    async getUserList(dto: AdminUserListDto): Promise<{ list: Array<AdminUserListItemDto>, count: number, pagination: PaginationResultDto }> {
         try {
             // 1. 개수
             const builder = this.repository.createQueryBuilder('u');
@@ -75,11 +77,64 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
             builder.orderBy('u.create_at', 'DESC');
             builder.limit(pagination.limit);
             builder.offset(pagination.offset);
-            const list: Array<AdminUserListVO> = await builder.getRawMany<AdminUserListVO>();
+            const list: Array<AdminUserListItemDto> = await builder.getRawMany<AdminUserListItemDto>();
 
             return { list, count, pagination: pagination.getPagination() };
         } catch (error) {
             throw error;
+        }
+    }
+
+    /**
+     * 회원 상세 조회
+     *
+     * @param user_id
+     * @returns
+     */
+    async findById(user_id: string): Promise<AdminUserViewItemDto | null> {
+        try {
+            const builder = this.repository.createQueryBuilder('u');
+            builder.select(`
+                  u.user_id
+                , u.login_id
+                , u.name
+                , u.nickname
+                , date_format(u.create_at, '%Y-%m-%d %H:%i') as create_at
+                , a.auth_id
+                , a.auth_name
+                , s.state_id
+                , s.state_name
+            `);
+            builder.innerJoin('t_auth', 'a', 'u.auth_id = a.auth_id');
+            builder.innerJoin('t_state', 's', 'u.state_id = s.state_id');
+            builder.where('u.user_id = :user_id', {user_id});
+            return builder.getRawOne<AdminUserViewItemDto>();
+        } catch (error) {
+            throw new InternalServerErrorException({message: '회원 정보 조회에 실패했습니다. 관리자에게 문의해주세요.'});
+        }
+    }
+
+    /**
+     * 회원가입
+     *
+     * @param user
+     * @returns
+     */
+    async sign(user: UserEntity): Promise<void> {
+        try {
+            await this.repository.insert(user);
+        } catch (error) {
+            if (error.errno === 1062 && error.sqlMessage.indexOf('Unique_User_loginId') !== -1) {
+                const message: string = '이미 사용중인 아이디입니다.';
+                const validationErrors: Array<ValidationErrorDto> = createValidationError('login_id', message);
+                throw new BadRequestException({message, validationErrors});
+            } else if (error.errno === 1062 && error.sqlMessage.indexOf('Unique_User_nickname') !== -1) {
+                const message: string = '이미 사용중인 닉네임입니다.';
+                const validationErrors: Array<ValidationErrorDto> = createValidationError('nickname', message);
+                throw new BadRequestException({message, validationErrors});
+            } else {
+                throw new InternalServerErrorException({message: '회원가입 처리에 실패했습니다. 관리자에게 문의해주세요.'});
+            }
         }
     }
 }

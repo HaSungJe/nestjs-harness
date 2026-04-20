@@ -46,6 +46,10 @@ lerna-debug.log*
 .temp
 .tmp
 
+# harness
+.harness/.retry-count
+.harness/.current-spec
+
 # Runtime data
 pids
 *.pid

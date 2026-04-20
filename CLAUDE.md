@@ -3,7 +3,66 @@
 ## ⚠️ 주의사항
 
 `npm run` 명령은 반드시 사용자가 직접 실행 (Claude 실행 금지)
+단, `npm test`는 예외 — 구현 완료 후 Claude가 Bash 도구로 직접 실행
 
+---
+
+## Harness Engineering
+
+이 프로젝트는 **Harness Engineering** 방식으로 운영됩니다.
+Claude는 harness-config.json의 규칙과 아래 워크플로를 반드시 따릅니다.
+
+### 워크플로
+```
+① 사람 → .harness/plan/request/plan-N-request.md 작성 (template 기반)
+② PostToolUse 훅 → validate-request.js 검증 (필수 항목 누락 시 STOP)
+③ Claude → .harness/plan/work/plan-N-work.md 작성 (구현 계획)
+④ 사람 → .harness/checklists/work-review.md 기준 승인
+⑤ Claude → 구현 코드 + src/api/v1/<domain>/test/<feature>.spec.ts 동시 생성
+⑥ Claude → Bash로 `npm test` 직접 실행 → 실패 시 에러 분석 후 수정 (최대 10회)
+⑦ .harness/reporters/work-summary.template.md 기반 리포트 생성
+```
+
+### 핵심 파일
+```
+.harness/
+├── harness-config.json               # 하네스 전체 규칙
+├── plan/
+│   ├── request.template.md            # 요청 작성 양식
+│   ├── request/<domain>/             # 도메인별 요청 파일
+│   └── work/<domain>/                # 도메인별 구현 계획
+├── specs/
+│   ├── request.schema.json           # Request 유효성 스키마
+│   └── validate-request.js           # 검증 스크립트
+├── triggers/on-request-written.sh    # PostToolUse 훅
+├── checklists/work-review.md         # 승인 체크리스트
+└── reporters/work-summary.template.md
+```
+
+### 파일 명명 규칙
+- request 파일: `<featureName>-request.md` → `.harness/plan/request/<domain>/`
+- work 파일: `<featureName>-work.md` → `.harness/plan/work/<domain>/`
+- 구두 요청 시 work 파일만 생성 가능
+
+### 테스트 파일 규칙
+- 위치: 해당 기능의 controller와 같은 레벨의 `test/` 폴더
+  - 예: `src/api/v1/user/admin/test/<feature>.spec.ts`
+  - 예: `src/api/v1/user/user/test/<feature>.spec.ts`
+- 구성:
+  - `[SUCCESS]` × 1 — 정상 흐름
+  - `[FAIL:validation]` × 1 — 필수 필드 전체 누락
+  - `[FAIL:duplicate]` × N — INSERT 대상 테이블마다
+  - `[FAIL:service]` × N — service throw 분기마다
+  - `[FAIL:repository]` × N — repository catch 블록마다
+- **필수 boilerplate** — 모든 spec 파일 상단에 반드시 포함:
+  ```typescript
+  jest.mock('typeorm-transactional', () => ({
+      initializeTransactionalContext: jest.fn(),
+      Transactional: () => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor,
+  }));
+  ```
+
+---
 
 ## Architecture
 
@@ -26,6 +85,8 @@ src/
 - Entity: `*Entity` suffix. Constraint: `Entity` 제거한 짧은 이름
 - DTO: `*.dto.ts` / Utils: 전역 `src/common/utils/`, 도메인 `<domain>.util.ts`
 - **DTO 파일 합치기**: 같은 기능(query + result 등)의 DTO는 하나의 파일에 작성 (예: `get-blood-glucose.dto.ts`)
+- **VO 사용 금지** — 쿼리 결과 타입은 `ItemDto`로 통일
+- **DTO suffix 규칙**: `QueryDto`(목록 조회) / `ParamDto`(path param) / `ItemDto`(개별 항목) / `ResultDto`(응답 최상위)
 - API route: `/api/v1/<domain>/...`
 - Path param: snake_case (`visit_round_id`), 전 레이어 통일
 - **`@Param()` DTO 필수** — `@Param('key')` 방식 금지
@@ -157,12 +218,6 @@ src/modules/queue/
   ```
 
 → 상세: [docs/architecture.md](docs/architecture.md)
-
-## 파일 명명 규칙 (작업 계획)
-
-- request 파일: `plan-N-request.md` / work 파일: `plan-N-work.md`
-- 구두 요청 시 work 파일만 생성 가능
-- 경로는 request 파일은 /plan/request에 생성하고, work 파일은 /plan/work에 생성
 
 ## Checklist
 

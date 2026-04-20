@@ -43,6 +43,33 @@ Repository interface/implementation, Service, Controller 메서드 전부 필수
 async methodName(param1: Type, param2: Type): Promise<ReturnType> { ... }
 ```
 
+## DTO 파일 구성 및 네이밍
+
+하나의 기능에 관련된 DTO는 **파일 1개**에 모두 작성.
+
+| 클래스 suffix | 용도 | 예시 |
+|---------------|------|------|
+| `QueryDto` | 목록 조회 query param | `AdminUserListDto` |
+| `ParamDto` | path param | `AdminUserViewParamDto` |
+| `ItemDto` | 목록의 개별 항목 (구 VO 역할) | `AdminUserListItemDto` |
+| `ResultDto` | API 응답 최상위 | `AdminUserListResultDto`, `AdminUserViewResultDto` |
+
+- **VO 사용 금지** — 쿼리 결과 타입도 `ItemDto`로 통일
+- 단일 조회 응답은 `ResultDto` 안에 `item` 또는 `info` 필드로 감싸기:
+  ```typescript
+  export class AdminUserViewResultDto {
+      @ApiProperty({type: () => AdminUserViewItemDto})
+      info: AdminUserViewItemDto;
+  }
+  ```
+- 목록 응답은 `ResultDto` 안에 `list` 필드:
+  ```typescript
+  export class AdminUserListResultDto {
+      @ApiProperty({type: () => [AdminUserListItemDto]})
+      list: AdminUserListItemDto[];
+  }
+  ```
+
 ## DTO 객체 배열 필드
 
 인라인 객체 타입(`{key: string}[]`) 사용 시 Swagger에서 `["string"]`으로 잘못 표시됨. 반드시 별도 클래스로 선언하고 `type: [ClassName]`으로 지정.

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .harness/triggers/on-request-written.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

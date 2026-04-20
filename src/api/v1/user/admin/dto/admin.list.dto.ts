@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { AdminUserListVO } from "../vo/list.vo";
 import { PaginationDto, PaginationResultDto } from "@root/common/dto/pagination.dto";
 
 /**
@@ -28,6 +27,38 @@ export class AdminUserListDto extends PaginationDto {
 }
 
 /**
+ * 회원 항목
+ */
+export class AdminUserListItemDto {
+    @ApiProperty({description: '회원 ID', required: true})
+    user_id: string;
+
+    @ApiProperty({description: '권한 ID', required: true})
+	auth_id: string;
+
+    @ApiProperty({description: '권한명', required: true})
+	auth_name: string;
+
+    @ApiProperty({description: '상태 ID', required: true})
+	state_id: string;
+
+    @ApiProperty({description: '상태명', required: true})
+	state_name: string;
+
+    @ApiProperty({description: '로그인 가능 여부(Y/N)', required: true})
+	login_able_yn: 'Y' | 'N'; 
+
+    @ApiProperty({description: '이름', required: true})
+	name: string;
+
+    @ApiProperty({description: '닉네임', required: true})
+	nickname: string;
+
+    @ApiProperty({description: '생성일', required: true})
+	create_at: string;
+}
+
+/**
  * 회원 목록 반환 Dto
  */
 export class AdminUserListResultDto {
@@ -37,6 +68,6 @@ export class AdminUserListResultDto {
     @ApiProperty({description: '페이지 정보', required: true, type: () => PaginationResultDto})
     pagination: PaginationResultDto;
 
-    @ApiProperty({description: '회원 목록', required: true, isArray: true, type: () => AdminUserListVO})
-    list: Array<AdminUserListVO>;
+    @ApiProperty({description: '회원 목록', required: true, type: () => [AdminUserListItemDto]})
+    list: AdminUserListItemDto[];
 }
