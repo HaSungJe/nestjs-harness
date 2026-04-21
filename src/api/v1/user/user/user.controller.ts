@@ -3,7 +3,7 @@ import { UserService } from './user.service';
 import { LoginDto, LoginResultDto } from './dto/login.dto';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { PassportJwtAuthGuard } from '@root/guards/passport.jwt.auth/passport.jwt.auth.guard';
-import { PassportUserResultVo, PassportUserSuccessResultDto } from '@root/guards/passport.jwt.auth/passport.jwt.auth.dto';
+import { PassportUserResultDto, PassportUserSuccessResultDto } from '@root/guards/passport.jwt.auth/passport.jwt.auth.dto';
 import { SignDto } from './dto/sign.dto';
 import { CheckLoginIdDto } from './dto/check.login-id.dto';
 import { CheckNicknameDto } from './dto/check.nickname.dto';
@@ -150,7 +150,7 @@ export class UserController {
     @ApiInternalServerErrorResponse({type: ApiFailResultDto})
     async patchNickname(@Req() req: any, @Body() dto: PatchNicknameDto): Promise<void | ApiBadRequestResultDto> {
         try {
-            const user: PassportUserResultVo = req.user;
+            const user: PassportUserResultDto = req.user;
             await this.service.patchNickname(user.user_id, dto.nickname);
         } catch (error) {
             throw error;
@@ -173,7 +173,7 @@ export class UserController {
     @ApiInternalServerErrorResponse({type: ApiFailResultDto})
     async putUserInfo(@Req() req: any, @Body() dto: PutUserInfoDto): Promise<void | ApiBadRequestResultDto> {
         try {
-            const user: PassportUserResultVo = req.user;
+            const user: PassportUserResultDto = req.user;
             await this.service.putUserInfo(user.user_id, dto);
         } catch (error) {
             throw error;

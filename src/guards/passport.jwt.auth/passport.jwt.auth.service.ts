@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource } from "typeorm";
-import { PassportUserResultVo } from "./passport.jwt.auth.dto";
+import { PassportUserResultDto } from "./passport.jwt.auth.dto";
 
 @Injectable()
 export class PassPortJwtAuthService {
@@ -14,7 +14,7 @@ export class PassPortJwtAuthService {
      * @param user_id 
      * @returns 
      */
-    async getLoginUser(user_id: string): Promise<PassportUserResultVo> {
+    async getLoginUser(user_id: string): Promise<PassportUserResultDto> {
         try {
             // 1. 회원 정보 조회
             const builder = this.dataSource.createQueryBuilder();
@@ -32,7 +32,7 @@ export class PassPortJwtAuthService {
             builder.innerJoin('t_auth', 'a', 'u.auth_id = a.auth_id');
             builder.where('u.user_id = :user_id', {user_id});
             builder.andWhere('s.login_able_yn = :login_able_yn', {login_able_yn: 'Y'});
-            const result: PassportUserResultVo = await builder.getRawOne();
+            const result: PassportUserResultDto = await builder.getRawOne();
             if (result) {
                 return result;
             } else {

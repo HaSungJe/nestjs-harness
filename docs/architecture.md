@@ -138,7 +138,7 @@ providers: [VisitService, VisitScheduler, ...]
 
 ### Authentication
 
-- `PassportJwtAuthGuard` (`@UseGuards(PassportJwtAuthGuard)`) — JWT 검증, `req.user` = `PassportUserResultVo`
+- `PassportJwtAuthGuard` (`@UseGuards(PassportJwtAuthGuard)`) — JWT 검증, `req.user` = `PassportUserResultDto`
 - `AuthGuard` + `@Auths('ADMIN')` — 역할 검사 (`user.auth_id` 기준)
 
 ### Import Alias
