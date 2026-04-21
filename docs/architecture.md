@@ -21,7 +21,7 @@ src/
 │   └── utils/                # bcrypt.ts, validation.ts, pagination.ts
 ├── modules/                  # 인프라 @Module (TypeORM, Redis 등)
 ├── guards/
-│   ├── auth/                 # Role-based AuthGuard + @Auths() decorator
+│   ├── auth/                 # Role-based AuthGuard + @Roles() decorator
 │   └── passport.jwt.auth/    # JWT Passport strategy + guard
 ├── exception/exception.ts    # Global exception filter (CustomErrorFilter)
 ├── config/typeorm.config.ts
@@ -139,7 +139,7 @@ providers: [VisitService, VisitScheduler, ...]
 ### Authentication
 
 - `PassportJwtAuthGuard` (`@UseGuards(PassportJwtAuthGuard)`) — JWT 검증, `req.user` = `PassportUserResultDto`
-- `AuthGuard` + `@Auths('ADMIN')` — 역할 검사 (`user.auth_id` 기준)
+- `AuthGuard` + `@Roles('ADMIN')` — 역할 검사 (`user.auth_id` 기준)
 
 ### Import Alias
 

@@ -17,7 +17,7 @@ affected_tables: ["t_user"]
 - Response: 200 void
 
 ## 비즈니스 규칙
-- 관리자 권한 체크 (@Auths('ADMIN'))
+- 관리자 권한 체크 (@Roles('ADMIN'))
 - 존재하지 않는 user_id 시 404
 - 이미 탈퇴된 회원(state_id === 'LEAVE') 시 400
 

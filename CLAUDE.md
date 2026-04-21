@@ -186,7 +186,7 @@ src/
 - Repository DI: Symbol token (`<domain>.symbols.ts`) + `@Inject(TOKEN)`
 - Transaction: `@Transactional()` from `typeorm-transactional`
 - Scheduler: `<domain>.scheduler.ts`, plain provider (Symbol 불필요), `ScheduleModule.forRoot()` 중복 등록 금지
-- Auth: `PassportJwtAuthGuard` (JWT) + `AuthGuard` + `@Auths('ADMIN')` (권한)
+- Auth: `PassportJwtAuthGuard` (JWT) + `AuthGuard` + `@Roles('ADMIN')` (권한)
 - Import alias: `@root/` (maps to `src/`)
 
 ## BullMQ (Write FIFO Queue)

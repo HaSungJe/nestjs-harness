@@ -21,7 +21,7 @@ affected_tables: ["t_user"]
 - Response: 200 void
 
 ## 비즈니스 규칙
-- 관리자 권한 체크 (@Auths('ADMIN'))
+- 관리자 권한 체크 (@Roles('ADMIN'))
 - login_pw !== login_pw2 시 400
 
 ## 참고사항

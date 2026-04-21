@@ -27,7 +27,7 @@ affected_tables: []
     - state_name: string
 
 ## 비즈니스 규칙
-- 관리자 권한 체크 (@Auths('ADMIN'))
+- 관리자 권한 체크 (@Roles('ADMIN'))
 - 존재하지 않는 user_id 요청 시 404
 
 ## 참고사항
