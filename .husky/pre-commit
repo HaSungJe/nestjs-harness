@@ -1,1 +1,11 @@
+if command -v gitleaks &> /dev/null; then
+    gitleaks protect --staged --redact
+    if [ $? -ne 0 ]; then
+        echo "[Gitleaks] 시크릿이 감지되었습니다. 커밋이 차단되었습니다."
+        exit 1
+    fi
+else
+    echo "[Gitleaks] gitleaks가 설치되어 있지 않습니다. 시크릿 검사를 건너뜁니다."
+fi
+
 npm test

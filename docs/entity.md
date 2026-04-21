@@ -5,11 +5,11 @@
 | Type | Pattern | Example |
 |------|---------|---------|
 | PK | `PK_<Name>` | `PK_User` |
-| UK | `Unique_<Name>_<ColumnName>` | `Unique_User_loginId` |
-| UK (composite) | `Unique_<Name>_<ColA>And<ColB>` | `Unique_User_loginIdAndstateId` |
-| IDX | `Index_<Name>_<ColumnName>` | `Index_Auth_order` |
-| IDX (composite) | `Index_<Name>_<ColA>And<ColB>` | `Index_User_stateIdAndcreateAt` |
-| FK | `<ChildName>_FK_<ParentName>` | `User_FK_Auth` |
+| UK | `UK_<Name>_<Col>` | 1단어: `UK_User_LoginId` / 2단어 이상 함축: `UK_User_Login` |
+| UK (composite) | `UK_<Name>_<ColA>And<ColB>` | 함축: `UK_User_LoginAndState` |
+| IDX | `IDX_<Name>_<Col>` | 1단어: `IDX_Auth_Order` / 2단어 이상 함축: `IDX_Auth_Order` |
+| IDX (composite) | `IDX_<Name>_<ColA>And<ColB>` | 함축: `IDX_User_StateAndCreate` |
+| FK | `FK_<ChildName>_<ParentName>` | `FK_User_Auth` |
 
 > `<Name>` = 클래스명에서 `Entity` 제거 (`UserEntity` → `User`)
 
@@ -29,15 +29,15 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, Index, JoinColumn, ManyToOn
 import { AuthEntity } from './auth.entity';
 
 @Entity({name: 't_user', comment: '회원 정보'})
-@Unique('Unique_User_loginId', ['login_id'])
-@Unique('Unique_User_loginIdAndstateId', ['login_id', 'state_id'])  // composite UK
-@Index('Index_User_stateIdAndcreateAt', ['state_id', 'create_at'])  // composite IDX
+@Unique('UK_User_LoginId', ['login_id'])
+@Unique('UK_User_LoginAndState', ['login_id', 'state_id'])  // composite UK
+@Index('IDX_User_StateAndCreate', ['state_id', 'create_at'])  // composite IDX
 export class UserEntity {
     @PrimaryColumn({name: 'user_id', length: 32, comment: '회원 ID', primaryKeyConstraintName: 'PK_User'})
     user_id: string;
 
     @ManyToOne(() => AuthEntity, {nullable: false, onUpdate: 'CASCADE', onDelete: 'CASCADE'})
-    @JoinColumn({name: 'auth_id', referencedColumnName: 'auth_id', foreignKeyConstraintName: 'User_FK_Auth'})
+    @JoinColumn({name: 'auth_id', referencedColumnName: 'auth_id', foreignKeyConstraintName: 'FK_User_Auth'})
     auth_id: string;
 
     @Column({name: 'login_id', length: 30, nullable: false, comment: '로그인 ID'})
