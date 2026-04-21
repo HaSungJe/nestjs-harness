@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, HttpStatus, Ip, Param, Patch, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Ip, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { LoginDto, LoginResultDto } from './dto/login.dto';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
@@ -11,6 +11,7 @@ import { ApiBadRequestResultDto, ApiFailResultDto } from '@root/common/dto/globa
 import { RefreshDto, RefreshResultDto } from './dto/refresh.dto';
 import { PatchNicknameDto } from './dto/patch.nickname.dto';
 import { PutUserInfoDto } from './dto/put.user-info.dto';
+import { PassportUser } from '@root/guards/passport.jwt.auth/passport.jwt.auth.decorator';
 
 @ApiTags('회원')
 @Controller('/api/v1/user')
@@ -67,7 +68,7 @@ export class UserController {
     /**
      * 내 정보
      * 
-     * @param req 
+     * @param user 
      * @returns 
      */
     @Get('/info')
@@ -75,8 +76,8 @@ export class UserController {
     @UseGuards(PassportJwtAuthGuard)
     @ApiOkResponse({type: PassportUserSuccessResultDto})
     @ApiUnauthorizedResponse({type: ApiFailResultDto})
-    async info(@Req() req: any): Promise<PassportUserSuccessResultDto | ApiFailResultDto> {
-        return { info: req.user };
+    async info(@PassportUser() user: PassportUserResultDto): Promise<PassportUserSuccessResultDto | ApiFailResultDto> {
+        return { info: user };
     }
 
     /**
@@ -137,7 +138,7 @@ export class UserController {
     /**
      * 닉네임 변경
      * 
-     * @param req 
+     * @param user 
      * @param dto 
      */
     @Patch('/nickname')
@@ -148,9 +149,8 @@ export class UserController {
     @ApiUnauthorizedResponse({type: ApiFailResultDto})
     @ApiForbiddenResponse({type: ApiFailResultDto})
     @ApiInternalServerErrorResponse({type: ApiFailResultDto})
-    async patchNickname(@Req() req: any, @Body() dto: PatchNicknameDto): Promise<void | ApiBadRequestResultDto> {
+    async patchNickname(@PassportUser() user: PassportUserResultDto, @Body() dto: PatchNicknameDto): Promise<void | ApiBadRequestResultDto> {
         try {
-            const user: PassportUserResultDto = req.user;
             await this.service.patchNickname(user.user_id, dto.nickname);
         } catch (error) {
             throw error;
@@ -160,7 +160,7 @@ export class UserController {
     /**
      * 회원정보 수정
      * 
-     * @param req 
+     * @param user 
      * @param dto 
      */
     @Put('/info')
@@ -171,9 +171,8 @@ export class UserController {
     @ApiUnauthorizedResponse({type: ApiFailResultDto})
     @ApiForbiddenResponse({type: ApiFailResultDto})
     @ApiInternalServerErrorResponse({type: ApiFailResultDto})
-    async putUserInfo(@Req() req: any, @Body() dto: PutUserInfoDto): Promise<void | ApiBadRequestResultDto> {
+    async putUserInfo(@PassportUser() user: PassportUserResultDto, @Body() dto: PutUserInfoDto): Promise<void | ApiBadRequestResultDto> {
         try {
-            const user: PassportUserResultDto = req.user;
             await this.service.putUserInfo(user.user_id, dto);
         } catch (error) {
             throw error;
@@ -183,7 +182,7 @@ export class UserController {
     /**
      * 회원탈퇴
      * 
-     * @param req 
+     * @param user 
      * @returns 
      */
     @Delete('/leave')
@@ -193,9 +192,9 @@ export class UserController {
     @ApiUnauthorizedResponse({type: ApiFailResultDto})
     @ApiForbiddenResponse({type: ApiFailResultDto})
     @ApiInternalServerErrorResponse({type: ApiFailResultDto})
-    async leave(@Req() req: any): Promise<void | ApiFailResultDto> {
+    async leave(@PassportUser() user: PassportUserResultDto): Promise<void | ApiFailResultDto> {
         try {
-            await this.service.leave(req.user.id);
+            await this.service.leave(user.user_id);
         } catch (error) {
             throw error;
         }

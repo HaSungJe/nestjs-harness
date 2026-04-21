@@ -189,6 +189,10 @@ src/
 - Transaction: `@Transactional()` from `typeorm-transactional`
 - Scheduler: `<domain>.scheduler.ts`, plain provider (Symbol 불필요), `ScheduleModule.forRoot()` 중복 등록 금지
 - Auth: `PassportJwtAuthGuard` (JWT) + `AuthGuard` + `@Roles('ADMIN')` (권한)
+- **로그인 회원 정보**: 반드시 `@PassportUser() user: PassportUserResultDto` 사용 (`@Req()` 금지)
+  - import: `@root/guards/passport.jwt.auth/passport.jwt.auth.decorator`
+  - DTO: `@root/guards/passport.jwt.auth/passport.jwt.auth.dto`
+  - 특정 필드만 필요 시: `@PassportUser('user_id') userId: string`
 - Import alias: `@root/` (maps to `src/`)
 
 ## BullMQ (Write FIFO Queue)
