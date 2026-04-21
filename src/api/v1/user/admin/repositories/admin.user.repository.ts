@@ -24,7 +24,11 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
      * @returns 
      */
     async getCount(option: FindManyOptions<UserEntity>): Promise<number> {
-        return this.repository.count(option);
+        try {
+            return await this.repository.count(option);
+        } catch (error) {
+            throw new InternalServerErrorException({message: '회원 수 조회에 실패했습니다. 관리자에게 문의해주세요.'});
+        }
     }
 
     /**
@@ -81,7 +85,7 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
 
             return { list, count, pagination: pagination.getPagination() };
         } catch (error) {
-            throw error;
+            throw new InternalServerErrorException({message: '회원 목록 조회에 실패했습니다. 관리자에게 문의해주세요.'});
         }
     }
 
@@ -124,7 +128,7 @@ export class AdminUserRepository implements AdminUserRepositoryInterface {
         try {
             await this.repository.update(where, entity);
         } catch (error) {
-            throw error;
+            throw new InternalServerErrorException({message: '회원 정보 수정에 실패했습니다. 관리자에게 문의해주세요.'});
         }
     }
 

@@ -165,10 +165,12 @@ src/
 
 ## Error Handling
 
-- Service throw: `const message = '...'; throw new HttpException({message, validationErrors: createValidationError(...)}, ...)`
-- Repository throw (errno 1062): `{message}` 만, `validationErrors` 금지
+- **Repository**: 모든 메서드 반드시 try/catch. 실패 시 `throw new InternalServerErrorException({message: '~~에 실패했습니다. 관리자에게 문의해주세요.'})`
+- **Repository insert/update**: errno 1062 추가 처리 — `throw new BadRequestException({message: '중복된 {xx}가 존재합니다.'})`. else 절은 `InternalServerErrorException`
 - errno 1062 확인: `error.errno === 1062 && error.sqlMessage.indexOf('constraint명') !== -1`
 - 범용 `update` 메서드 사용 시 errno 1062는 service에서 catch하여 처리 (repository가 제약 식별 불가)
+- `createValidationError` — **service에서만** 사용. repository 금지
+- Service throw: `const message = '...'; throw new HttpException({message, validationErrors: createValidationError(...)}, ...)`
 
 → 상세: [docs/error-handling.md](docs/error-handling.md)
 
