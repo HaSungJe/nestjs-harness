@@ -131,6 +131,14 @@ src/
 - **`@Param()` DTO 필수** — `@Param('key')` 방식 금지
 - **컨트롤러 메서드 파라미터 한 줄** — 멀티라인 금지
 - **validation error key**: 항상 `validationErrors`
+- **컨트롤러 경로 슬래시 규칙**: `@Controller`와 메서드 데코레이터 모두 앞에 `/` 필수
+  ```typescript
+  @Controller('/api/v1/dept')   // base 경로
+  ...
+  @Post('/')                    // 루트 엔드포인트
+  @Get('/list')                 // 하위 경로
+  @Patch('/:dept_id')           // path param
+  ```
 
 ## Repository 핵심 규칙
 
