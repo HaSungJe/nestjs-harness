@@ -1,5 +1,6 @@
 module.exports = {
   roots: ['<rootDir>/src'],
+  passWithNoTests: true,
   testMatch: ['**/*.spec.ts'],
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
