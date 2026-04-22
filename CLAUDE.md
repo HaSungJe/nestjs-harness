@@ -126,7 +126,12 @@ Claude 는 초안 작성 시 아래 카테고리에서 **해당 기능에 관련
   - 예: `src/api/v1/user/test/<feature>.spec.ts`
 - 구성:
   - `[SUCCESS]` × 1 — 정상 흐름
-  - `[FAIL:validation]` × 1 — 필수 필드 전체 누락
+  - `[FAIL:validation]` × 3~5 — **대표 분기 샘플링**. 모든 필드·모든 규칙 1:1 매핑 금지. 아래 카테고리 중 DTO 에 존재하는 것만 골라 각 카테고리당 1개씩:
+    - 필수(`@IsNotEmpty`): "전체 필드 누락" 1개로 모든 필수 규칙을 한 번에 트리거 (필드별 N개 금지)
+    - 길이 경계(`@MinLength`/`@MaxLength`): 대표 필드 1개씩 경계값 테스트 (각 경계 1개)
+    - 타입(`@IsString`/`@IsNumber` 등): 대표 필드 1개 타입 위반
+    - 포맷(`@Matches`/`@IsEmail` 등): 대표 필드 1개 패턴 위반
+    - 범위(`@Min`/`@Max`): 대표 필드 1개 범위 위반
   - `[FAIL:duplicate]` × N — INSERT 대상 테이블마다
   - `[FAIL:service]` × N — service throw 분기마다
   - `[FAIL:repository]` × N — repository catch 블록마다
