@@ -5,7 +5,9 @@
       "Bash(npm install *)",
       "Bash(npx husky *)",
       "Bash(node .harness/specs/validate-work.js *)",
-      "Bash(node .harness/specs/validate-request.js *)"
+      "Bash(node .harness/specs/validate-request.js *)",
+      "Bash(npx jest *)",
+      "Bash(node -e *)"
     ]
   }
 }

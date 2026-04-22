@@ -1,8 +1,8 @@
 {
   "name": "nestjs-harness",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "nestjs-harness",
+  "author": "HaSeongJe",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -37,6 +37,7 @@
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/typeorm": "^11.0.0",
     "@types/multer": "^2.0.0",
+    "@types/uuid": "^9.0.8",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.72.0",
     "class-transformer": "^0.5.1",
@@ -55,6 +56,7 @@
     "sharp": "^0.34.4",
     "typeorm": "^0.3.27",
     "typeorm-transactional": "^0.5.0",
+    "uuid": "^9.0.1",
     "xlsx-js-style": "^1.2.0",
     "xml2js": "^0.6.2"
   },

@@ -105,6 +105,21 @@ src/
 
 → 상세: [docs/architecture.md](docs/architecture.md)
 
+## Service 계층 규칙
+
+- **Service 는 기능(API) 단위 메서드만 갖는다** — 컨트롤러에서 호출되는 public 메서드 각각이 하나의 기능(feature)에 대응
+- **범용·재사용 가능 로직은 반드시 util 로 분리** — 여러 기능에서 공통으로 쓰일 수 있거나, 비즈니스와 무관한 기술적 변환/계산/가공은 service 내부 private 메서드가 아닌 util 로 추출
+  - 전역 util: `src/common/utils/*.ts` — 도메인 무관 (예: `bcrypt.ts`, `hash.ts`, `cipher.ts`, `jwt.ts`, `validation.ts`)
+  - 도메인 util: `src/api/v1/<domain>/<domain>.util.ts` — 해당 도메인 전용
+- **private 헬퍼 메서드 금지** — service 내부에 `private xxxUtil()` 식으로 두지 말 것. util 로 빼거나, 아예 로직이 기능 하나에만 필요하면 인라인으로 둔다
+- **판단 기준**: "이 함수가 다른 기능에서도 호출될 여지가 있는가?" 또는 "비즈니스 흐름과 독립된 단순 변환/가공인가?" 둘 중 하나라도 YES 면 util
+
+## 공통 로직 분리 규칙
+
+- 순수 함수(stateless) → util (`src/common/utils/` 또는 `<domain>.util.ts`). 예: `bcrypt.ts`, `hash.ts`, `cipher.ts`, `jwt.ts`
+- DI/lifecycle/외부연동(DB·Redis·큐·외부API·메일) 필요 → `@Module` — 인프라성은 `src/modules/`, 도메인 공유는 `src/shared/`
+- 사용자가 "공통 모듈" = `@Module` 로 해석, "공통 로직/범용 함수" = util 로 해석
+
 ## Validation 규칙
 
 - class-validator 데코레이터에는 반드시 `message` 옵션을 함께 지정
@@ -126,6 +141,10 @@ src/
 - **DTO 파일 합치기**: 같은 기능(query + result 등)의 DTO는 하나의 파일에 작성 (예: `get-blood-glucose.dto.ts`)
 - **VO 사용 금지** — 쿼리 결과 타입은 `ItemDto`로 통일
 - **DTO suffix 규칙**: `QueryDto`(목록 조회) / `ParamDto`(path param) / `ItemDto`(개별 항목) / `ResultDto`(응답 최상위)
+- **DTO 기능별 독립 명명 규칙** — 기능(API)당 DTO 파일 1개, 파일 내부 클래스명은 도메인+기능+역할을 모두 반영하여 다른 기능과 이름이 절대 충돌하지 않게 한다 (import alias 사용 금지)
+  - 형식: `<Domain><Feature><Role>Dto` — 예: `TeamUpdateParamDto`, `TeamUpdateDto`, `TeamDeleteParamDto`, `BoardListQueryDto`, `BoardListItemDto`, `BoardListResultDto`
+  - 파일명: `<domain>-<feature>.dto.ts` (예: `team-update.dto.ts`, `team-delete.dto.ts`)
+  - 다른 기능의 DTO를 재사용하지 않는다. 모양이 같아도 파일별로 독립 정의
 - API route: `/api/v1/<domain>/...`
 - Path param: snake_case (`visit_round_id`), 전 레이어 통일
 - **`@Param()` DTO 필수** — `@Param('key')` 방식 금지
@@ -249,7 +268,11 @@ src/modules/queue/
 
 ### `@UseQueue(consumerKey, jobKey)` 사용 규칙
 
-- **적용 대상**: 여러 사용자 간 순서 보장이 필요한 INSERT/UPDATE/DELETE 메서드 — 개인 단위 기능(로그인, 탈퇴 등)은 적용 불필요
+- **적용 대상 (기본값: 적용)**: INSERT / UPDATE / DELETE 가 한 건이라도 포함된 service 메서드는 **무조건 `@UseQueue`를 추가**한다. SELECT 전용 메서드만 예외.
+  - request.md frontmatter의 `queue_required: "N"` 으로 명시된 경우에만 생략 (드문 케이스 — 본인 데이터만 변경하고 race condition이 구조적으로 불가능한 경우 등)
+  - 판단을 미루지 말 것: "동시성 위험이 있을까?"를 매번 고민하지 말고, write 메서드면 일단 붙인다
+- **consumerKey 명명**: 도메인별 단일 컨슈머 사용 → `<domain>-consumer` (예: `dept-consumer`, `user-consumer`, `board-consumer`)
+- **jobKey 명명**: `<domain>-service-<action>` 형식 (예: `dept-service-create`, `dept-service-update`, `dept-service-delete`)
 - **데코레이터 순서**: `@UseQueue` 반드시 `@Transactional()` **위**에 배치
   ```typescript
   @UseQueue('user-consumer', 'user-service-sign')  // ← 위 (바깥 래퍼)

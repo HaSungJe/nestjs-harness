@@ -13,6 +13,11 @@ api_path: "/api/v1/user/admin/sign"
 
 # 예: ["user", "user_profile"] — INSERT/UPDATE/DELETE 대상 테이블 (duplicate 테스트 케이스 수 결정)
 affected_tables: ["t_user"]
+
+# Y | N — 이 기능이 INSERT/UPDATE/DELETE를 한 건이라도 포함하면 기본 "Y" (BullMQ로 직렬화).
+# affected_tables가 비어있는 SELECT 전용이면 "N".
+# write 작업이 있는데도 "N"으로 두려면 사유를 아래 본문 "큐 미사용 사유" 섹션에 명시할 것.
+queue_required: "Y"
 ---
 
 <!-- 이 기능이 왜 필요한지, 무엇을 하는지 설명 -->
@@ -38,3 +43,8 @@ affected_tables: ["t_user"]
 <!-- 관련 도메인, 참고할 기존 코드, 특이사항 -->
 ## 참고사항
 - /api/v1/user/sign
+
+<!-- queue_required: "N"으로 둔 경우에만 작성. write 작업이 있음에도 큐가 불필요한 이유를 명시. -->
+<!-- ## 큐 미사용 사유 -->
+<!-- 예: 본인 회원만 변경하므로 동시성 충돌 불가 / read-only 집계 트리거만 호출 등 -->
+

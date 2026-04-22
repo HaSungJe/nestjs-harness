@@ -1,28 +1,20 @@
 import { Column, Entity, PrimaryColumn } from "typeorm";
 
-/**
- * 상태 정보 Entity
- */
 @Entity({name: 't_state', comment: '상태 정보'})
 export class StateEntity {
-    @PrimaryColumn({name: 'state_id', comment: '상태 ID', length: 10, primaryKeyConstraintName: 'PK_State'})
+    @PrimaryColumn({name: 'state_id', comment: '상태 ID', length: 20, primaryKeyConstraintName: 'PK_State'})
     state_id: string;
 
-    @Column({name: 'state_name', nullable: false, comment: '상태명', length: 15})
+    @Column({name: 'state_name', comment: '상태명', length: 50, nullable: false})
     state_name: string;
 
-    @Column({name: 'login_able_yn', nullable: false, default: 'Y', comment: '로그인 가능 여부(Y/N)', length: 1})
-    login_able_yn: string;
+    @Column({name: 'is_login_able', type: 'tinyint', comment: '로그인 가능여부(0: 불가, 1: 가능)', nullable: false, default: 1})
+    is_login_able: number;
 }
 
 /**
-    insert into t_state (
-        state_id, state_name, login_able_yn 
-    ) values (
-        'DONE', '정상', 'Y'
-    ), (
-        'BLOCK', '정지', 'N'
-    ), (
-        'LEAVE', '탈퇴', 'N'
-    )
+    insert into t_state (state_id, state_name, is_login_able) values 
+    ('ACTIVE', '정상', 1),
+    ('ON_LEAVE', '휴직', 0),
+    ('RESIGNED', '퇴사', 0)
  */

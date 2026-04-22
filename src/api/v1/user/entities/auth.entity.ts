@@ -1,16 +1,11 @@
-import { Column, Entity, Index, PrimaryColumn, Unique } from "typeorm";
+import { Column, Entity, PrimaryColumn } from "typeorm";
 
-/**
- * 권한 정보 Entity
- */
-@Entity({ name: 't_auth', comment: '권한 정보' })
-@Index('Index_Auth_level', ['level'])
-@Unique('Unique_Auth_authName', ['auth_name'])
+@Entity({name: 't_auth', comment: '권한 정보'})
 export class AuthEntity {
-    @PrimaryColumn({name: 'auth_id', length: 20, comment: '권한 ID', primaryKeyConstraintName: 'PK_Auth'})
+    @PrimaryColumn({name: 'auth_id', comment: '권한 ID', length: 20, primaryKeyConstraintName: 'PK_Auth'})
     auth_id: string;
 
-    @Column({name: 'auth_name', comment: '권한명', nullable: false, length: 20})
+    @Column({name: 'auth_name', comment: '권한명', length: 50, nullable: false})
     auth_name: string;
 
     @Column({name: 'level', comment: '등급', nullable: false, default: 1})
@@ -18,13 +13,8 @@ export class AuthEntity {
 }
 
 /**
-    insert into t_auth (
-        auth_id, auth_name, level
-    ) values (
-        'SUPER_ADMIN', '총괄관리자', 999
-    ), (
-        'ADMIN', '관리자', 998
-    ), (
-        'USER', '일반사용자', 1
-    );
+    insert into t_auth (auth_id, auth_name, level) values 
+    ('SUPER_ADMIN', '총괄관리자', 999),
+    ('ADMIN', '관리자', 998),
+    ('USER', '사용자', 1)
  */

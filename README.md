@@ -1,6 +1,6 @@
 # nestjs-harness
 
-NestJS 11 기반 백엔드 보일러플레이트.
+NestJS11 + 하네스 엔지니어링 보일러 플레이트
 **Harness Engineering** 방식으로 AI(Claude)와 협업하는 구조화된 개발 워크플로를 포함합니다.
 
 ---

@@ -48,8 +48,10 @@
 
 ## 4. Service
 
+> **큐 적용 여부**: request.md의 `queue_required` 값에 따라 결정. 기본값 `Y` — INSERT/UPDATE/DELETE 메서드에는 반드시 `@UseQueue('<domain>-consumer', '<domain>-service-<action>')` 를 `@Transactional()` 위에 명시. `N`인 경우 그 사유를 한 줄로 인용.
+
 ```typescript
-// 구현 코드 (@UseQueue / @Transactional 필요 시 포함)
+// 구현 코드 (@UseQueue → @Transactional 순서)
 ```
 
 ---

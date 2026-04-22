@@ -1,21 +1,18 @@
-import { USER_REPOSITORY, USER_LOGIN_REPOSITORY, ADMIN_USER_REPOSITORY, USER_LOGIN_HISTORY_REPOSITORY } from './user.symbols';
 import { Module, SetMetadata } from '@nestjs/common';
-import { UserService } from './user/user.service';
-import { UserController } from './user/user.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeORMModule } from '@root/modules/typeorm/typeorm.module';
 import { PassportJwtAuthModule } from '@root/guards/passport.jwt.auth/passport.jwt.auth.module';
-import { AdminUserController } from './admin/admin.user.controller';
-import { AdminUserService } from './admin/admin.user.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './entities/user.entity';
-import { StateEntity } from './entities/state.entity';
+import { DeptModule } from '@root/api/v1/dept/dept.module';
 import { AuthEntity } from './entities/auth.entity';
-import { UserLoginEntity } from './entities/user-login.entity';
-import { UserRepository } from './user/repositories/user.repository';
-import { UserLoginRepository } from './user/repositories/user-login.repository';
-import { AdminUserRepository } from './admin/repositories/admin.user.repository';
-import { UserLoginHistoryEntity } from './entities/user-login-history.entity';
-import { UserLoginHistoryRepository } from './user/repositories/user-login-history.repository';
+import { PositionEntity } from './entities/position.entity';
+import { StateEntity } from './entities/state.entity';
+import { UserEntity } from './entities/user.entity';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
+import { UserRepository } from './repositories/user.repository';
+import { USER_REPOSITORY } from './user.symbols';
+import { SessionEntity } from './entities/session.entity';
+import { SessionRefreshEntity } from './entities/session-refresh.entity';
 
 @SetMetadata('type', 'API')
 @SetMetadata('description', '회원')
@@ -24,35 +21,20 @@ import { UserLoginHistoryRepository } from './user/repositories/user-login-histo
     imports: [
         TypeORMModule,
         TypeOrmModule.forFeature([
-            UserEntity,
-            StateEntity,
             AuthEntity,
-            UserLoginEntity,
-            UserLoginHistoryEntity
+            PositionEntity,
+            StateEntity,
+            UserEntity,
+            SessionEntity,
+            SessionRefreshEntity,
         ]),
-        PassportJwtAuthModule
+        PassportJwtAuthModule,
+        DeptModule,
     ],
-    controllers: [UserController, AdminUserController],
+    controllers: [UserController],
     providers: [
         UserService,
-        AdminUserService,
-        {
-            provide: USER_REPOSITORY,
-            useClass: UserRepository
-        },
-        {
-            provide: USER_LOGIN_REPOSITORY,
-            useClass: UserLoginRepository
-        },
-        {
-            provide: ADMIN_USER_REPOSITORY,
-            useClass: AdminUserRepository
-        },
-        {
-            provide: USER_LOGIN_HISTORY_REPOSITORY,
-            useClass: UserLoginHistoryRepository
-        }
+        {provide: USER_REPOSITORY, useClass: UserRepository},
     ],
 })
-
-export class UserModule { }
+export class UserModule {}

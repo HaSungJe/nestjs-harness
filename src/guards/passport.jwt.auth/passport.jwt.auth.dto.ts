@@ -22,8 +22,8 @@ export class PassportUserResultDto {
     @ApiProperty({description: '상태 ID', required: true})
     state_id: string;
 
-    @ApiProperty({description: '로그인 가능 여부', required: true})
-    login_able_yn: string;
+    @ApiProperty({description: '로그인 가능 여부(0: 불가, 1: 가능)', required: true})
+    is_login_able: number;
 }
 
 /**

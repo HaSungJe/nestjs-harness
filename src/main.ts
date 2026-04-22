@@ -72,7 +72,8 @@ async function bootstrap() {
 
     // API Swagger
     const reflector = app.get(Reflector);
-    const modules = Reflect.getMetadata('imports', AppModule) || [];
+    const rawModules: any[] = Reflect.getMetadata('imports', AppModule) || [];
+    const modules = rawModules.filter((m: any) => m && typeof m === 'function');
 
     // API Swagger 링크생성
     const isSwaggerTargetSelect: boolean = 'T' === process?.env?.SWAGGER_TARGET_SELECT ? true : false;
@@ -101,7 +102,7 @@ async function bootstrap() {
                 if (swagger_targets.includes(path)) {
                     const bearerAuthName: string = 'access-token';
                     const swaggerApiConfigData = new DocumentBuilder();
-                    swaggerApiConfigData.setTitle('API Document');
+                    swaggerApiConfigData.setTitle('API');
                     swaggerApiConfigData.setVersion(dayjs().format('YYYY-MM-DD HH:mm'));
                     swaggerApiConfigData.addServer(process.env.SWAGGER_URL);
                     swaggerApiConfigData.addBearerAuth({type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', in: 'header'}, bearerAuthName);
@@ -129,12 +130,12 @@ async function bootstrap() {
 
         // Swagger - 전체
         const swaggerApiConfigData = new DocumentBuilder();
-        swaggerApiConfigData.setTitle('API Document');
+        swaggerApiConfigData.setTitle('API');
         swaggerApiConfigData.setVersion(dayjs().format('YYYY-MM-DD HH:mm'));
         swaggerApiConfigData.addServer(process.env.SWAGGER_URL);
         const swaggerApiConfig = swaggerApiConfigData.build();
         SwaggerModule.setup(swagger_path, app, SwaggerModule.createDocument(app, swaggerApiConfig, {
-            include: [],
+            include: modules.filter(m => reflector.get<string>('type', m) === 'API'),
         }), {
             customJs: jqueryCDN,
             customJsStr: js
@@ -147,7 +148,7 @@ async function bootstrap() {
                 const path = reflector.get<string>('path', modules[i]);
                 const bearerAuthName: string = 'access-token';
                 const swaggerApiConfigData = new DocumentBuilder();
-                swaggerApiConfigData.setTitle('API Document');
+                swaggerApiConfigData.setTitle('API');
                 swaggerApiConfigData.setVersion(dayjs().format('YYYY-MM-DD HH:mm'));
                 swaggerApiConfigData.addServer(process.env.SWAGGER_URL);
                 swaggerApiConfigData.addBearerAuth({type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', in: 'header'}, bearerAuthName);

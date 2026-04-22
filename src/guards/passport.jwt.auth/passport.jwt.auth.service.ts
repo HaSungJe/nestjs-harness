@@ -25,13 +25,13 @@ export class PassPortJwtAuthService {
                 , u.nickname 
                 , a.auth_id 
                 , s.state_id 
-                , s.login_able_yn 
+                , s.is_login_able 
             `);
             builder.from('t_user', 'u');
             builder.innerJoin('t_state', 's', 'u.state_id = s.state_id');
             builder.innerJoin('t_auth', 'a', 'u.auth_id = a.auth_id');
             builder.where('u.user_id = :user_id', {user_id});
-            builder.andWhere('s.login_able_yn = :login_able_yn', {login_able_yn: 'Y'});
+            builder.andWhere('s.is_login_able = 1');
             const result: PassportUserResultDto = await builder.getRawOne();
             if (result) {
                 return result;
