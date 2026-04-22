@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 if command -v gitleaks &> /dev/null; then
     gitleaks protect --staged --redact
     if [ $? -ne 0 ]; then

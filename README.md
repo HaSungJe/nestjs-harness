@@ -57,6 +57,10 @@ JWT_SECRET=your_jwt_secret
 # BullMQ Redis
 BULLMQ_REDIS_HOST=localhost
 BULLMQ_REDIS_PORT=6379
+
+# refresh_token 복원용 AES-256-GCM 키
+# 키 생성: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+TOKEN_CIPHER_KEY=
 ```
 
 ### 2. Redis 실행 (Docker)
@@ -79,18 +83,16 @@ npm run dev
 ```
 src/
 ├── api/v1/
-│   ├── <domain>/              # Feature 모듈
-│   │   ├── admin/             # 관리자 서브도메인 (있는 경우)
-│   │   │   ├── dto/
-│   │   │   ├── interfaces/
-│   │   │   ├── repositories/
-│   │   │   ├── test/
-│   │   │   ├── admin.<domain>.controller.ts
-│   │   │   └── admin.<domain>.service.ts
-│   │   ├── user/              # 일반 사용자 서브도메인 (있는 경우)
-│   │   ├── entities/          # TypeORM Entity
-│   │   ├── <domain>.module.ts
-│   │   └── <domain>.symbols.ts
+│   └── <domain>/              # Feature 모듈
+│       ├── dto/
+│       ├── entities/          # TypeORM Entity
+│       ├── interfaces/        # Repository Interface
+│       ├── repositories/      # Repository 구현체
+│       ├── test/              # 기능별 spec 파일
+│       ├── <domain>.controller.ts
+│       ├── <domain>.service.ts
+│       ├── <domain>.module.ts
+│       └── <domain>.symbols.ts
 ├── shared/                    # 공유 Entity/Repository (controller 없음)
 ├── common/                    # DTO, 유틸리티 (no @Module)
 │   ├── dto/
@@ -224,7 +226,7 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 | 시점 | 주체 | 내용 |
 |------|------|------|
 | work.md 저장 시 | `validate-work.js` | 필수 섹션 / 테스트케이스 / 타입 독립 검증 |
-| `git commit` 시 | Husky | 전체 `npm test` 실행, 실패 시 커밋 차단 |
+| `git commit` 시 | Husky | gitleaks 시크릿 검사 + `src/**/*.ts`·`*.spec.ts` 스테이징 시 전체 `npm test` 실행, 실패 시 커밋 차단 |
 | `git push` 시 | GitHub Actions | 전체 `npm test` 실행, Husky 우회 시에도 차단 |
 
 ### 핵심 파일
@@ -233,8 +235,8 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 .harness/
 ├── harness-config.json               # 하네스 전체 규칙
 ├── plan/
-│   ├── request.template.md            # 요청 작성 양식
-│   ├── work.template.md               # 구현 계획 양식
+│   ├── request.template.md           # 요청 작성 양식
+│   ├── work.template.md              # 구현 계획 양식
 │   ├── request/<domain>/             # 도메인별 요청 파일
 │   └── work/<domain>/                # 도메인별 구현 계획
 ├── specs/
@@ -242,10 +244,15 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 │   ├── validate-request.js           # request 파일 검증
 │   └── validate-work.js              # work 파일 독립 검증 (PostToolUse 훅 자동 실행)
 ├── triggers/
-│   └── on-work-written.sh            # work Write 시 validate-work.js 실행
+│   ├── on-request-written.sh         # request Write 시 validate-request.js 실행
+│   ├── on-work-written.sh            # work Write 시 validate-work.js 실행
+│   ├── on-work-approved.sh           # work 승인 시 후속 단계 트리거
+│   └── run-tests.sh                  # 기능별 spec 실행 래퍼
 ├── checklists/work-review.md         # work 검토 체크리스트
 ├── reporters/work-summary.template.md
-└── reports/<domain>/                 # 완료 리포트 (자동 생성)
+├── reports/<domain>/                 # 완료 리포트 (자동 생성)
+├── workflow-samples/                 # 워크플로 예시(request/work/report + 스크린샷)
+└── memory/                           # 프로젝트 공유 메모리 (MEMORY.md + 항목별 md)
 ```
 
 ### 테스트 자동 생성
