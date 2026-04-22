@@ -35,6 +35,9 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Claude Code - 개인 오버라이드 (팀 공유 X)
+.claude/settings.local.json
+
 # dotenv environment variable files
 .env
 .env.development.local
