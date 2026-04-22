@@ -28,6 +28,43 @@
 
 ---
 
+## 작업 커밋·푸시 명령
+
+### "작업내용 커밋해줘"
+
+1. 변경분 전부 스테이징 — `git add -A`
+   - 단, `.claude/settings.local.json` 은 세션 로컬 파일이므로 반드시 `git restore --staged` 로 제외
+2. staged 변경분 중 `.harness/plan/request/<domain>/<feature>-request.md` 파일을 찾아 frontmatter `feature_goal` 값을 추출
+3. 커밋 메시지 형식 (HEREDOC 사용):
+   ```
+   <오늘 날짜 YYYY.MM.DD>
+
+   * <feature_goal 1>
+   * <feature_goal 2>
+   ```
+   - 제목 줄: 오늘 날짜를 `YYYY.MM.DD` 형식으로 (예: `2026.04.22`)
+   - 한 줄 공백 후 본문: 각 `feature_goal` 을 `* ` 로 시작하는 bullet 로 나열
+4. staged 변경분에 request.md 가 없으면 사용자에게 제목을 직접 확인 후 진행 (임의 작성 금지)
+5. `--no-verify` 금지. husky 훅 실패 시 원인 조사·수정 후 재커밋
+
+### "작업내용 푸쉬해줘"
+
+현재 작업이 워크트리(`.claude/worktrees/<name>`) 에서 이루어지는 경우 — Claude Code 가 자동 생성하는 worktree 브랜치는 **upstream 이 `origin/main` 으로 설정**되어 있어 PR 없이 main 에 직접 반영 가능:
+
+1. worktree 디렉터리에서 `git push` — origin/main 업데이트
+2. 본체 리포(worktree 상위 리포) 로 이동해 로컬 main 동기화:
+   ```bash
+   git checkout main
+   git merge --ff-only <worktree-branch>
+   ```
+   - 본체 working tree 에 충돌 파일이 있고 push 된 커밋에 동일 내용이 포함돼 있으면 `git checkout <file>` 로 discard 후 재시도
+
+worktree 가 아닌 일반 브랜치 환경이면:
+1. `git push -u origin <branch>`
+2. `gh pr create` → PR 머지
+
+---
+
 ## Harness Engineering
 
 이 프로젝트는 **Harness Engineering** 방식으로 운영됩니다.
