@@ -229,6 +229,28 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 | `git commit` 시 | Husky | gitleaks 시크릿 검사 + `src/**/*.ts`·`*.spec.ts` 스테이징 시 전체 `npm test` 실행, 실패 시 커밋 차단 |
 | `git push` 시 | GitHub Actions | 전체 `npm test` 실행, Husky 우회 시에도 차단 |
 
+### Git 워크플로 자동화
+
+Claude 에게 자연어로 commit·push 를 위임할 수 있습니다. 규칙은 [CLAUDE.md](CLAUDE.md) "작업 커밋·푸시 명령" 섹션에 정의.
+
+| 명령 | 동작 |
+|------|------|
+| `작업내용 커밋해줘` | `git add -A` (`.claude/settings.local.json` 제외) → staged 된 `*-request.md` 의 `feature_goal` 을 bullet 로 수집 → `YYYY.MM.DD` 제목 + bullet 본문으로 커밋. request.md 변경이 없으면 Claude 가 제목을 사용자에게 확인 후 진행 |
+| `작업내용 푸쉬해줘` | 머지 대상 브랜치를 사용자에게 질의 → `git push origin HEAD:<target>` → 본체 리포 로컬 브랜치를 `git merge --ff-only <worktree-branch>` 로 동기화 |
+
+**워크트리 기반 작업 격리**
+
+Claude Code 는 요청을 받으면 자동으로 `.claude/worktrees/<name>` 에 격리된 worktree 와 `claude/<name>` 브랜치를 생성합니다. 브랜치의 upstream 이 `origin/main` 으로 설정돼 있어 PR 없이 main 에 직접 푸시되는 구조이며, 본체 리포의 `main` 은 오염되지 않고 fast-forward 로만 동기화됩니다.
+
+**커밋 메시지 형식**
+
+```
+2026.04.22
+
+* 관리자 회원가입
+* 로그인
+```
+
 ### 핵심 파일
 
 ```
