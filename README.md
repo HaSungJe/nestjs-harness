@@ -1,7 +1,7 @@
 # nestjs-harness
 
-NestJS11 + 하네스 엔지니어링 보일러 플레이트
-**Harness Engineering** 방식으로 AI(Claude)와 협업하는 구조화된 개발 워크플로를 포함합니다.
+NestJS11 + 하네스 보일러 플레이트
+**Harness** 방식으로 AI(Claude)와 협업하는 구조화된 개발 워크플로를 포함합니다.
 
 ---
 
@@ -191,11 +191,11 @@ src/api/v1/reserve/
 
 - `app.module.ts` 자동 등록
 - Entity는 사람이 직접 설계 및 작성
-- 이후 기능 개발은 Harness Engineering 워크플로로 진행
+- 이후 기능 개발은 Harness 워크플로로 진행
 
 ---
 
-## Harness Engineering
+## Harness
 
 AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하네스 시스템을 포함합니다.
 
