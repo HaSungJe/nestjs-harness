@@ -34,8 +34,14 @@
 │   ├── on-work-approved.sh
 │   └── run-tests.sh
 ├── samples/                # 참고용 워크플로 샘플(request/work/report + 스크린샷)
+├── skeleton/               # 타 프로젝트로 "설치" 될 때 복사·merge 될 원본 파일
+│   ├── claude-settings.partial.json  # .claude/settings.json 에 merge 할 하네스 항목
+│   ├── husky-pre-commit.sh           # .husky/pre-commit 에 append 할 하네스 블록
+│   └── gitignore-entries.txt         # .gitignore 에 append 할 라인
 └── memory/                 # 프로젝트 공유 메모리 (MEMORY.md + 항목별 md)
 ```
+
+> `templates/` (런타임에 Claude 가 사용하는 컨텐츠 양식) 과 `skeleton/` (install 시 타 프로젝트로 복사되는 셋업 파일) 은 용도가 완전히 다르므로 분리.
 
 ### 각 층의 역할
 
@@ -159,3 +165,34 @@ index.md 권장 섹션:
 - [ ] `docs/routing.md` 해당 행 삭제 / 수정
 - [ ] CLAUDE.md / AGENTS.md 해당 키워드 bullet 삭제 / 수정
 - [ ] 다른 `index.md` 에서 `../<old>/index.md` 링크 검색·갱신
+
+---
+
+## 6. 타 프로젝트로 설치 (플러그인화 대비)
+
+`skeleton/` 하위 파일들은 장래 **npm 패키지 `init` 명령이 타 프로젝트에 주입**할 원본이다. 각 파일의 merge 규칙:
+
+### `skeleton/claude-settings.partial.json` → 사용자 `.claude/settings.json`
+
+사용자 기존 settings.json 이:
+- **없음** → 파셜 내용 그대로 `.claude/settings.json` 생성
+- **있음** → 다음 규칙으로 merge:
+  - `hooks.PostToolUse[]` — matcher 동일한 항목이 있으면 `hooks[]` 에 append (중복 command 는 skip)
+  - `permissions.allow[]` — array union (중복 제거)
+  - `permissions.deny[]` — **건드리지 않음** (사용자 주권)
+
+### `skeleton/husky-pre-commit.sh` → 사용자 `.husky/pre-commit`
+
+`# === harness-block-start ===` ~ `# === harness-block-end ===` 블록 단위로 관리.
+
+- **없음** → `.husky/` 생성 + 이 파일 그대로 복사 + `chmod +x`
+- **있음, 블록 미존재** → 파일 끝에 블록 append
+- **있음, 블록 존재** → skip (재실행 idempotent)
+
+### `skeleton/gitignore-entries.txt` → 사용자 `.gitignore`
+
+각 줄별로 존재 여부 확인 후 미존재 라인만 append. 주석(`#` 로 시작) 은 함께 넣지 말고 라인 자체만.
+
+### 업데이트 시 (`sync` 등 재실행)
+
+모든 merge 는 **idempotent** — 이미 있는 항목은 skip, 신규만 추가. `--force` 플래그 주면 덮어쓰기 가능.

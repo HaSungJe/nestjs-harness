@@ -1,0 +1,22 @@
+{
+  "_comment": "하네스가 사용자 .claude/settings.json 에 merge 해야 할 최소 항목. npm init 이 이 파일을 읽어 사용자 기존 settings.json 에 append (중복 체크). 사용자 기존 훅/권한은 절대 덮어쓰지 않음.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .harness/hooks/on-work-written.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(node .harness/validators/validate-work.js *)",
+      "Bash(node .harness/validators/validate-request.js *)"
+    ]
+  }
+}
