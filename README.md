@@ -210,7 +210,7 @@ AI 코딩 어시스턴트(Claude)를 **구조적으로 제어**하기 위한 하
 | ⑤ | **사람** | work 파일 검토 후 Claude에게 구현 지시 |
 | ⑥ | Claude | 구현 코드 + `spec.ts` 동시 생성 |
 | ⑦ | Claude | 해당 기능 spec만 실행 → 실패 시 에러 분석 후 수정 (최대 10회) |
-| ⑧ | Claude | 리포트 생성 (`.harness/reports/<domain>/<feature>-report.md`) |
+| ⑧ | Claude | 리포트 생성 (`.harness/output/report/<domain>/<feature>-report.md`) |
 | ⑨ | **사람** | `git commit` → Husky 전체 테스트 → `git push` → GitHub Actions 전체 테스트 |
 
 ### 사람이 해야 하는 일
@@ -255,25 +255,28 @@ Claude Code 는 요청을 받으면 자동으로 `.claude/worktrees/<name>` 에 
 
 ```
 .harness/
+├── harness.md                        # 명령어 라우팅 인덱스
 ├── harness-config.json               # 하네스 전체 규칙
-├── plan/
-│   ├── request.template.md           # 요청 작성 양식
-│   ├── work.template.md              # 구현 계획 양식
+├── setting/                          # 셋업 가이드 (command-routing.md, command-add.md)
+├── docs/                             # 명령별 실행 규칙 (폴더당 index.md)
+├── templates/
+│   ├── request.md                    # 요청 작성 양식
+│   ├── work.md                       # 구현 계획 양식
+│   └── report.md                     # 리포트 양식
+├── output/
 │   ├── request/<domain>/             # 도메인별 요청 파일
-│   └── work/<domain>/                # 도메인별 구현 계획
-├── specs/
+│   ├── work/<domain>/                # 도메인별 구현 계획
+│   └── report/<domain>/              # 완료 리포트 (자동 생성)
+├── validators/
 │   ├── request.schema.json           # Request 유효성 JSON Schema
 │   ├── validate-request.js           # request 파일 검증
 │   └── validate-work.js              # work 파일 독립 검증 (PostToolUse 훅 자동 실행)
-├── triggers/
+├── hooks/
 │   ├── on-request-written.sh         # request Write 시 validate-request.js 실행
 │   ├── on-work-written.sh            # work Write 시 validate-work.js 실행
 │   ├── on-work-approved.sh           # work 승인 시 후속 단계 트리거
 │   └── run-tests.sh                  # 기능별 spec 실행 래퍼
-├── checklists/work-review.md         # work 검토 체크리스트
-├── reporters/work-summary.template.md
-├── reports/<domain>/                 # 완료 리포트 (자동 생성)
-├── workflow-samples/                 # 워크플로 예시(request/work/report + 스크린샷)
+├── samples/                          # 워크플로 예시(request/work/report + 스크린샷)
 └── memory/                           # 프로젝트 공유 메모리 (MEMORY.md + 항목별 md)
 ```
 

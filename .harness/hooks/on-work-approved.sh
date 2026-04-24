@@ -2,7 +2,7 @@
 # UserPromptSubmit hook — approved work 파일 감지 후 구현 지시 주입
 APPROVED_FILE=""
 
-for file in $(find .harness/plan/work -name "*-work.md" 2>/dev/null | sort); do
+for file in $(find .harness/output/work -name "*-work.md" 2>/dev/null | sort); do
     [ -f "$file" ] || continue
     if grep -q "^approved: true" "$file" && ! grep -q "^implemented: true" "$file"; then
         APPROVED_FILE="$file"

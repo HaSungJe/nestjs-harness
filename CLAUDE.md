@@ -1,5 +1,19 @@
 # CLAUDE.md
 
+## 명령어 라우팅
+
+사용자 요청에 아래 키워드/상황이 포함되면 **먼저 `.harness/harness.md` 를 읽고** 그 인덱스를 따라 해당 상세 문서를 읽어 규칙대로 실행한다.
+
+- `도메인 생성` (예: `user 도메인 생성`)
+- `기능 생성` (예: `xxx 기능 생성`) — request/work 기획 단계
+- `작업 시작` (예: `xxx 작업 시작`) — 구현·테스트·리포트 단계
+- `커밋` (예: `작업내용 커밋해줘`)
+- `푸쉬` (예: `작업내용 푸쉬해줘`)
+
+`.harness/harness.md` 에서도 해당 항목을 찾지 못하면 하네스 엔지니어링 외 요청으로 간주하고 일반 채팅/작업으로 처리한다. 파일 자체가 없으면 무시하고 아래 코드 규칙만 따른다.
+
+---
+
 ## 메모리 시스템
 
 메모리는 사용자 로컬이 아닌 **프로젝트 내 `.harness/memory/`** 에 저장한다 (팀 공유 가능).
@@ -9,7 +23,7 @@
 
 ### 저장 대상
 
-이 프로젝트만의 특정 규칙이 필요할 때 `.harness/memory/`에 정리한다.
+이 프로젝트만의 특정 규칙이 필요할 때 `.harness/memory/` 에 정리한다.
 - 코드나 파일을 보면 알 수 있는 내용은 저장하지 않는다.
 - 도메인별 구현 현황, 기능 단위 작업 사항은 저장하지 않는다.
 
@@ -18,191 +32,7 @@
 ## ⚠️ 주의사항
 
 `npm run` 명령은 반드시 사용자가 직접 실행 (Claude 실행 금지)
-단, `npm test`는 예외 — 구현 완료 후 Claude가 Bash 도구로 직접 실행
-
----
-
-## 도메인 생성 명령
-
-→ [docs/domain-create.md](docs/domain-create.md)
-
----
-
-## 작업 커밋·푸시 명령
-
-### "작업내용 커밋해줘"
-
-1. 변경분 전부 스테이징 — `git add -A`
-   - 단, `.claude/settings.local.json` 은 세션 로컬 파일이므로 반드시 `git restore --staged` 로 제외
-2. staged 변경분 중 `.harness/plan/request/<domain>/<feature>-request.md` 파일을 찾아 frontmatter `feature_goal` 값을 추출
-3. 커밋 메시지 형식 (HEREDOC 사용):
-   ```
-   <오늘 날짜 YYYY.MM.DD>
-
-   * <feature_goal 1>
-   * <feature_goal 2>
-   ```
-   - 제목 줄: 오늘 날짜를 `YYYY.MM.DD` 형식으로 (예: `2026.04.22`)
-   - 한 줄 공백 후 본문: 각 `feature_goal` 을 `* ` 로 시작하는 bullet 로 나열
-4. staged 변경분에 request.md 가 없으면 사용자에게 제목을 직접 확인 후 진행 (임의 작성 금지)
-5. `--no-verify` 금지. husky 훅 실패 시 원인 조사·수정 후 재커밋
-
-### "작업내용 푸쉬해줘"
-
-1. **대상 브랜치 확인** — "어느 브랜치에 머지할까요? (기본: main)" 형태로 사용자에게 반드시 질의. 답변 없이 임의로 진행 금지.
-2. 답변받은 브랜치명을 `<target>` 이라 할 때, worktree 디렉터리에서:
-   ```bash
-   git push origin HEAD:<target>
-   ```
-   - `git push` 단독 사용 금지 — push.default=simple 환경에서 브랜치명 불일치 에러 발생. 항상 `HEAD:<target>` 형식 사용.
-3. 본체 리포(worktree 상위 리포) 로 이동해 해당 브랜치 로컬 동기화:
-   ```bash
-   git checkout <target>
-   git merge --ff-only <worktree-branch>
-   ```
-   - 본체 working tree 에 충돌 파일이 있고 push 된 커밋에 동일 내용이 포함돼 있으면 `git checkout <file>` 로 discard 후 재시도
-
-worktree 가 아닌 일반 브랜치 환경이면:
-1. 대상 브랜치 동일하게 사용자에게 질의
-2. `git push origin HEAD:<target>` 또는 `git push -u origin <branch>` 후 필요 시 `gh pr create` → PR 머지
-
----
-
-## Harness Engineering
-
-이 프로젝트는 **Harness Engineering** 방식으로 운영됩니다.
-Claude는 harness-config.json의 규칙과 아래 워크플로를 반드시 따릅니다.
-
-### 워크플로
-```
-① 사람 → 기능을 구두로 설명
-② Claude → .harness/plan/request/<domain>/<featureName>-request.md 초안 작성 (request.template.md 기반). 코드 컨벤션만으로 판단이 애매한 항목은 request.md **"확정 설계 결정사항"** 섹션에 질문으로 나열 (답은 비워둠)
-③ 사람 → request 파일 보완 + "확정 설계 결정사항" 답변 후 Claude에게 work 작성 지시
-④ Claude → "확정 설계 결정사항" 답변 반영하여 .harness/plan/work/<domain>/<featureName>-work.md 작성 (work.template.md 기반). 미답 항목이 있으면 작성 중단하고 사용자에게 재질의
-⑤ 사람 → work 파일 검토 후 Claude에게 직접 구현 지시
-⑥ Claude → 구현 코드 + src/api/v1/<domain>/test/<feature>.spec.ts 동시 생성
-⑦ Claude → Bash로 해당 기능 spec만 실행 (`npm test -- --testPathPatterns=<featureName>`) → 실패 시 에러 분석 후 수정 (최대 10회)
-⑧ Claude → 리포트 생성: `.harness/reports/<domain>/<featureName>-report.md`
-⑨ 사람 → git commit 시 Husky: staged 에 `src/**/*.ts` 또는 `*.spec.ts` 가 있으면 전체 `npm test` 실행 (회귀 보장), 그 외(문서·설정 등)는 건너뜀
-```
-
-### 리포트 규칙
-- 템플릿: `.harness/reporters/work-summary.template.md`
-- 저장 위치: `.harness/reports/<domain>/<featureName>-report.md`
-- 생성 타이밍: `npm test` 전체 통과 직후 (⑥ 완료 시)
-- 포함 내용:
-  - 기능 요약 (feature_goal, domain, API)
-  - 생성/수정된 파일 목록
-  - 테스트 결과 (스위트 수, 통과/실패)
-  - 자가 수복 이력 (재시도가 있었을 경우 원인·수정 내용)
-  - 잔여 이슈
-
-### 파일 명명 규칙
-- request 파일: `<featureName>-request.md` → `.harness/plan/request/<domain>/`
-- work 파일: `<featureName>-work.md` → `.harness/plan/work/<domain>/`
-- 구두 요청 시 work 파일만 생성 가능
-
-### 확정 설계 결정사항 규칙
-
-코드 컨벤션·docs 로 일괄 판단이 어려운 항목은 Claude 가 임의 결정하지 말고 request.md "확정 설계 결정사항" 섹션에 질문으로 나열한다. 사용자가 답을 채운 뒤 work 작성으로 진행. 답변 없는 항목이 남은 상태에서 Claude 는 work 파일을 작성하지 않는다.
-
-Claude 는 초안 작성 시 아래 카테고리에서 **해당 기능에 관련된 항목만** 골라 `[ ]` 체크리스트로 추가한다 (무관한 항목은 생략).
-
-#### A. 인증·권한 (모든 API 공통 — 필수 질문)
-- 인증 필요 여부 (`PassportJwtAuthGuard` Y/N)
-- 권한 제한 (`@Roles` 값, 없으면 "없음". 복수 지정 가능: 예 "ADMIN, SUPER_ADMIN")
-
-#### B. 큐 (INSERT/UPDATE/DELETE 포함 시)
-- `@UseQueue` 적용 여부 (Y/N)
-- N 인 경우 request.md "큐 미사용 사유" 섹션 필수
-
-#### C. 응답 형식 (GET·POST·PATCH 모두)
-- 성공 응답 형식 (204 No Content / 200·`ResultDto`)
-- 단일 조회 응답의 래퍼 필드명 (`info` / `item`) — 단일 리소스 조회일 때만
-
-#### D. 목록 API (GET list)
-- 페이지네이션 적용 여부 (Y/N)
-- 정렬·필터 옵션 목록 (필드·값 범위·기본값) — request 본문에 정리
-
-#### E. 트랜잭션
-- `@Transactional()` 적용 여부 (write 는 기본 Y, 미적용 시 사유)
-- 여러 service 메서드 체이닝·스케줄러 트리거 등 추가 트랜잭션 경계가 필요한 경우
-
-#### F. Entity (신규 Entity 또는 기존 Entity 확장 시)
-- 신규 Entity 생성 vs 기존 Entity 컬럼 추가
-- Unique constraint 적용 (컬럼 조합과 이름)
-- FK 관계 (`@ManyToOne` 대상, `onDelete`/`onUpdate` 정책)
-- 인덱스 추가 필요 여부
-
-#### G. 유틸·공용 모듈
-- 새 util 추가 시 범위 (전역 `src/common/utils/` vs 도메인 `<domain>.util.ts`)
-- 공용 Entity/Repository 가 필요한 경우 `shared/` 배치 여부
-
-#### H. 기타
-- 스케줄러 연계 (cron 트리거 필요 여부)
-- 외부 시스템 연동 (메일·푸시·외부 API 등)
-- errno 1062 처리 지점 (범용 `update` 사용 시 service 에서 catch 할 constraint)
-
-**질문 형식 예시** (request.md 본문에 추가)
-```markdown
-## 확정 설계 결정사항
-- [ ] A. 인증 필요 여부 (Y/N):
-- [ ] A. 권한 제한 (@Roles 값 / 없음):
-- [ ] B. 큐 적용 여부 (Y/N):
-- [ ] C. 성공 응답 형식 (204 / ResultDto):
-- [ ] E. @Transactional 적용 여부 (Y/N):
-```
-
-### Work 파일 규칙
-- 템플릿: `.harness/plan/work.template.md` 기반으로 작성
-- 모든 섹션 필수 포함: 기능 요약 / 파일 목록 / DTO / Repository Interface / Repository 구현 / Service / Controller / 테스트 케이스 / Response 코드
-- 코드 블록은 실제 구현 가능한 수준으로 작성 (대략적 스케치 금지)
-- frontmatter 없음 — approved/implemented 상태 관리 불필요
-- **work 파일 저장 즉시** PostToolUse 훅이 `validate-work.js`를 자동 실행하여 독립 검증. 실패 시 즉시 수정 후 재저장
-- **work 파일 작성 완료 직후**, `.harness/checklists/work-review.md`의 모든 항목을 대조하여 결과를 대화에 출력 (✅/❌ 형식). 미충족 항목은 즉시 work 파일 수정 후 재출력
-
-### 테스트 파일 규칙
-- 위치: 해당 기능의 controller와 같은 레벨의 `test/` 폴더
-  - 예: `src/api/v1/user/test/<feature>.spec.ts`
-- 구성:
-  - `[SUCCESS]` × 1 — 정상 흐름
-  - `[FAIL:validation]` × 3~5 — **대표 분기 샘플링**. 모든 필드·모든 규칙 1:1 매핑 금지. 아래 카테고리 중 DTO 에 존재하는 것만 골라 각 카테고리당 1개씩:
-    - 필수(`@IsNotEmpty`): "전체 필드 누락" 1개로 모든 필수 규칙을 한 번에 트리거 (필드별 N개 금지)
-    - 길이 경계(`@MinLength`/`@MaxLength`): 대표 필드 1개씩 경계값 테스트 (각 경계 1개)
-    - 타입(`@IsString`/`@IsNumber` 등): 대표 필드 1개 타입 위반
-    - 포맷(`@Matches`/`@IsEmail` 등): 대표 필드 1개 패턴 위반
-    - 범위(`@Min`/`@Max`): 대표 필드 1개 범위 위반
-  - `[FAIL:duplicate]` × N — INSERT 대상 테이블마다
-  - `[FAIL:service]` × N — service throw 분기마다
-  - `[FAIL:repository]` × N — repository catch 블록마다
-- **필수 boilerplate** — 모든 spec 파일 상단에 반드시 포함:
-  ```typescript
-  jest.mock('typeorm-transactional', () => ({
-      initializeTransactionalContext: jest.fn(),
-      Transactional: () => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor,
-  }));
-  ```
-
-#### 테스트 강도 규칙 (의미 있는 검증)
-HTTP 상태코드만 확인하는 "값 만들어서 반환 확인" 수준의 테스트 금지. 각 케이스는 아래 기준을 **모두** 만족해야 한다.
-
-- **[SUCCESS] 강제 assertion (회귀 방지)**
-  - 모든 repository / util mock 의 **호출 횟수**(`toHaveBeenCalledTimes`) 확인
-  - 모든 repository / util mock 의 **호출 인자**(`toHaveBeenCalledWith`) 확인 — where 조건, bcrypt 입력 순서, 해시 대상 비번 등
-  - write 메서드의 경우 entity 인자의 **의도한 컬럼만 set / 의도 외 컬럼은 `undefined`** 검증 (다른 컬럼 오염 방지)
-  - 이유: 단순 상태코드만 보면 "다른 사용자 레코드 업데이트" "평문 저장" "wrong bcrypt argument order" 같은 치명적 버그가 통과
-
-- **[FAIL:validation] / [FAIL:service] short-circuit 검증**
-  - 에러 분기 발생 시 **그 이후 단계의 repository/util mock 은 호출되지 않았음**을 `.not.toHaveBeenCalled()` 로 확인
-  - 응답 본문의 `validationErrors[0].property` 가 예상 필드와 일치하는지 확인
-
-- **[FAIL:repository] 격리 검증**
-  - 실패 지점 이후의 mock 이 호출되지 않았음을 확인
-  - 응답 `message` 가 repository 에서 던진 메시지와 일치하는지 확인
-
-- **금지 사항**
-  - repository/util mock 에 아무 assertion 없이 상태코드만 검사하는 케이스
-  - `expect.anything()` 남용 (구체적 값을 알 수 있으면 구체 값으로 검증)
+단, `npm test` 는 예외 — 구현 완료 후 Claude 가 Bash 도구로 직접 실행
 
 ---
 
@@ -386,8 +216,6 @@ src/modules/queue/
 ### `@UseQueue(consumerKey, jobKey)` 사용 규칙
 
 - **적용 대상**: INSERT / UPDATE / DELETE 가 한 건이라도 포함된 service 메서드. SELECT 전용 메서드는 제외.
-- **적용 여부 결정**: Claude 가 자체 판단하지 않는다. request.md 의 "확정 설계 결정사항" 항목으로 사용자에게 질의, 답변에 따라 `queue_required` 및 `@UseQueue` 적용 여부를 결정. (→ [확정 설계 결정사항 규칙](#확정-설계-결정사항-규칙) 참조)
-- `queue_required: "N"` 인 경우 request.md 에 "큐 미사용 사유" 섹션 작성
 - **consumerKey 명명**: 도메인별 단일 컨슈머 사용 → `<domain>-consumer` (예: `dept-consumer`, `user-consumer`, `board-consumer`)
 - **jobKey 명명**: `<domain>-service-<action>` 형식 (예: `dept-service-create`, `dept-service-update`, `dept-service-delete`)
 - **데코레이터 순서**: `@UseQueue` 반드시 `@Transactional()` **위**에 배치

@@ -3,7 +3,7 @@
 INPUT=$(cat)
 FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
-if [[ "$FILE" == .harness/plan/request/*/*-request.md ]]; then
+if [[ "$FILE" == .harness/output/request/*/*-request.md ]]; then
   echo "[harness] request 파일 감지: $FILE"
-  node .harness/specs/validate-request.js "$FILE"
+  node .harness/validators/validate-request.js "$FILE"
 fi

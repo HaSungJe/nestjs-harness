@@ -11,7 +11,7 @@ if (!filePath) {
 const content = fs.readFileSync(filePath, 'utf-8');
 const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
 if (!fmMatch) {
-  console.error('[harness] STOP: frontmatter가 없습니다. request.template.md를 사용하세요.');
+  console.error('[harness] STOP: frontmatter가 없습니다. .harness/templates/request.md를 사용하세요.');
   process.exit(1);
 }
 
@@ -34,7 +34,7 @@ for (const field of schema.required) {
 
 if (missing.length > 0) {
   console.error(`[harness] STOP: 필수 항목 누락 → ${missing.join(', ')}`);
-  console.error('[harness] request.template.md 양식을 채운 후 다시 저장하세요.');
+  console.error('[harness] .harness/templates/request.md 양식을 채운 후 다시 저장하세요.');
   process.exit(1);
 }
 
