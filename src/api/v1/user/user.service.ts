@@ -51,7 +51,6 @@ export class UserService {
         entity.nickname = dto.nickname;
         entity.auth_id = dto.auth_id;
         entity.state_id = 'ACTIVE';
-        entity.team_id = dto.team_id ?? null;
         entity.position_id = dto.position_id ?? null;
 
         await this.userRepository.insert(entity);

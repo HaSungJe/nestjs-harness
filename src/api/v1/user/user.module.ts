@@ -2,7 +2,6 @@ import { Module, SetMetadata } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeORMModule } from '@root/modules/typeorm/typeorm.module';
 import { PassportJwtAuthModule } from '@root/guards/passport.jwt.auth/passport.jwt.auth.module';
-import { DeptModule } from '@root/api/v1/dept/dept.module';
 import { AuthEntity } from './entities/auth.entity';
 import { PositionEntity } from './entities/position.entity';
 import { StateEntity } from './entities/state.entity';
@@ -28,8 +27,7 @@ import { SessionRefreshEntity } from './entities/session-refresh.entity';
             SessionEntity,
             SessionRefreshEntity,
         ]),
-        PassportJwtAuthModule,
-        DeptModule,
+        PassportJwtAuthModule
     ],
     controllers: [UserController],
     providers: [
