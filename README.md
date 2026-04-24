@@ -255,10 +255,11 @@ Claude Code 는 요청을 받으면 자동으로 `.claude/worktrees/<name>` 에 
 
 ```
 .harness/
-├── harness.md                        # 명령어 라우팅 인덱스
+├── README.md                         # 하네스 구조·셋업·명령 관리 가이드
 ├── harness-config.json               # 하네스 전체 규칙
-├── setting/                          # 셋업 가이드 (command-routing.md, command-add.md)
-├── docs/                             # 명령별 실행 규칙 (폴더당 index.md)
+├── docs/                             # 라우팅 인덱스 + 명령별 실행 규칙
+│   ├── routing.md                    # 명령어 ↔ 상세 문서 라우팅 인덱스
+│   └── <command>/index.md            # 명령별 실행 규칙 (폴더당 index.md)
 ├── templates/
 │   ├── request.md                    # 요청 작성 양식
 │   ├── work.md                       # 구현 계획 양식
