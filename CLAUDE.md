@@ -1,6 +1,10 @@
 # CLAUDE.md
 
-## 명령어 라우팅
+## 플러그인 설정
+
+아래 규칙들은 `nestjs-harness-plugin` 의 동작을 이 프로젝트에 맞게 설정한다. 코드 컨벤션이 아닌 **하네스 기능 설정** 이므로 아래 "Architecture" 이하의 규칙과 별개로 관리.
+
+### 명령어 라우팅
 
 사용자 요청에 아래 키워드/상황이 포함되면 **먼저 `.harness/docs/routing.md` 를 읽고** 그 인덱스를 따라 해당 상세 문서를 읽어 규칙대로 실행한다.
 
@@ -12,20 +16,17 @@
 
 `.harness/docs/routing.md` 에서도 해당 항목을 찾지 못하면 하네스 외 요청으로 간주하고 일반 채팅/작업으로 처리한다. 파일 자체가 없으면 무시하고 아래 코드 규칙만 따른다.
 
----
-
-## 메모리 시스템
+### 메모리 시스템
 
 메모리는 사용자 로컬이 아닌 **프로젝트 내 `.harness/memory/`** 에 저장한다 (팀 공유 가능).
 - 인덱스: `.harness/memory/MEMORY.md`
 - 메모리 파일: `.harness/memory/<name>.md`
 - 시스템 기본 경로(`~/.claude/projects/.../memory/`)는 사용하지 않는다.
 
-### 저장 대상
-
-이 프로젝트만의 특정 규칙이 필요할 때 `.harness/memory/` 에 정리한다.
-- 코드나 파일을 보면 알 수 있는 내용은 저장하지 않는다.
-- 도메인별 구현 현황, 기능 단위 작업 사항은 저장하지 않는다.
+저장 대상:
+- 이 프로젝트만의 특정 규칙이 필요할 때 `.harness/memory/` 에 정리
+- 코드나 파일을 보면 알 수 있는 내용은 저장하지 않음
+- 도메인별 구현 현황, 기능 단위 작업 사항은 저장하지 않음
 
 ---
 
@@ -157,6 +158,7 @@ src/
 - errno 1062 확인: `error.errno === 1062 && error.sqlMessage.indexOf('constraint명') !== -1`
 - 범용 `update` 메서드 사용 시 errno 1062는 service에서 catch하여 처리 (repository가 제약 식별 불가)
 - `createValidationError` — **service에서만** 사용. repository 금지
+- **`validationErrors` 사용 조건**: 사용자가 직접 입력한 필드(body/query/path param)가 잘못된 경우에만 포함. 비즈니스 규칙 위반·서버 내부 생성값(JWT user_id, dayjs 시각 등) 오류는 `{message}` 단독 throw
 - Service throw: `const message = '...'; throw new HttpException({message, validationErrors: createValidationError(...)}, ...)`
 
 → 상세: [docs/error-handling.md](docs/error-handling.md)
@@ -181,7 +183,11 @@ src/
 - Repository DI: Symbol token (`<domain>.symbols.ts`) + `@Inject(TOKEN)`
 - Transaction: `@Transactional()` from `typeorm-transactional`
 - Scheduler: `<domain>.scheduler.ts`, plain provider (Symbol 불필요), `ScheduleModule.forRoot()` 중복 등록 금지
-- Auth: 컨트롤러 또는 메서드에 직접 선언
+- Import alias: `@root/` (maps to `src/`)
+
+## Auth
+
+- 인증/권한은 컨트롤러 또는 메서드에 직접 선언
   ```typescript
   @UseGuards(PassportJwtAuthGuard, AuthGuard)
   @Roles('ADMIN')
@@ -193,7 +199,6 @@ src/
   - import: `@root/guards/passport.jwt.auth/passport.jwt.auth.decorator`
   - DTO: `@root/guards/passport.jwt.auth/passport.jwt.auth.dto`
   - 특정 필드만 필요 시: `@PassportUser('user_id') userId: string`
-- Import alias: `@root/` (maps to `src/`)
 
 ## BullMQ (Write FIFO Queue)
 

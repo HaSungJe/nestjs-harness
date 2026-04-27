@@ -48,3 +48,23 @@ async insert(entity: XxxEntity): Promise<void> {
 const message = '운영 요일을 선택해주세요.';
 throw new HttpException({message, validationErrors: createValidationError('weekdays', message)}, HttpStatus.BAD_REQUEST);
 ```
+
+## validationErrors 사용 기준
+
+`validationErrors`는 **사용자가 직접 입력한 필드 값이 잘못된 경우에만** 사용한다.
+
+| 케이스 | validationErrors 포함 여부 |
+|--------|---------------------------|
+| 입력 필드 값 자체가 유효하지 않음 (예: 중복 ID, 비밀번호 불일치) | ✅ 포함 |
+| 요청 바디 / 쿼리 파라미터 필드 포맷 오류 | ✅ 포함 |
+| path param으로 조회한 리소스가 존재하지 않음 | ✅ 포함 |
+| 비즈니스 규칙 위반 (입력값과 무관한 상태·권한·정책) | ❌ 제외 — `{message}` 단독 throw |
+| 서버 내부에서 생성된 값(JWT user_id, dayjs 시각 등)의 오류 | ❌ 제외 — `{message}` 단독 throw |
+
+```ts
+// ❌ 잘못된 예 — 비즈니스 규칙 에러에 validationErrors 사용
+throw new HttpException({message, validationErrors: createValidationError('state_id', message)}, HttpStatus.BAD_REQUEST);
+
+// ✅ 올바른 예 — 비즈니스 규칙 에러
+throw new HttpException({message: '퇴사 처리된 회원의 상태는 변경할 수 없습니다.'}, HttpStatus.BAD_REQUEST);
+```
