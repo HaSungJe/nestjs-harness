@@ -262,6 +262,26 @@ src/modules/queue/
 
 → 상세: [docs/architecture.md](docs/architecture.md)
 
+## 테스트 규칙
+
+→ 상세: [.harness/docs/feature-implement/test-file.md](.harness/docs/feature-implement/test-file.md)
+
+모든 테스트 케이스는 **실행 경로 전체**를 검증한다. 상태코드와 메시지만 확인하는 테스트 금지.
+
+### [SUCCESS]
+- 호출된 모든 mock 의 **호출 횟수** + **호출 인자** 확인
+- write mock 은 전달된 entity 의 컬럼 값까지 검증
+
+### [FAIL:service] / [FAIL:validation]
+- **실패 지점까지** 호출된 mock 의 호출 횟수 + 호출 인자 확인
+- 실패 지점 이후 mock 은 `.not.toHaveBeenCalled()` 로 미호출 확인
+- 목표: 테스트만 봐도 "어느 단계까지 실행되다 왜 멈췄는지" 추적 가능
+
+### [FAIL:repository]
+- **실패 지점까지** 호출된 mock 의 호출 횟수 + 호출 인자 확인 (write mock 은 entity 컬럼 값 포함)
+- 실패 지점 이후 mock 은 `.not.toHaveBeenCalled()` 로 미호출 확인
+- 목표: 테스트만 봐도 "어느 repository 에서 실패했고, 그 전까지 어떤 데이터가 흘렀는지" 추적 가능
+
 ## Checklist
 
 - [ ] `validationErrors` key 일관 사용 (pipe + 수동 throw)
