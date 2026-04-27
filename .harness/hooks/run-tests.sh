@@ -11,7 +11,7 @@ MAX_RETRY=10
 IS_SPEC=false
 IS_RETRY_IMPL=false
 [[ "$FILE" == *.spec.ts ]] && IS_SPEC=true
-[[ "$FILE" == src/api/v1/*.ts && "$FILE" != *.spec.ts && -f "$RETRY_FILE" ]] && IS_RETRY_IMPL=true
+[[ "$FILE" =~ ^src/.+\.ts$ && "$FILE" != *.spec.ts && -f "$RETRY_FILE" ]] && IS_RETRY_IMPL=true
 
 if [ "$IS_SPEC" = false ] && [ "$IS_RETRY_IMPL" = false ]; then
   exit 0

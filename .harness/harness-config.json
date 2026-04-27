@@ -1,7 +1,13 @@
 {
   "project_name": "nestjs-harness",
   "harness_rules": {
-    "step_0_required_fields": ["feature_goal", "domain", "api_method", "api_path", "affected_tables"],
+    "step_0_required_fields": [
+      "feature_goal",
+      "domain",
+      "api_method",
+      "api_path",
+      "affected_tables"
+    ],
     "step_5_fail_retry_limit": 10,
     "enforced_docs": [
       "docs/architecture.md",
@@ -9,6 +15,17 @@
       "docs/repository.md",
       "docs/error-handling.md",
       "docs/swagger-dto.md"
+    ],
+    "required_work_sections": [
+      "## 기능 요약",
+      "## 파일 목록",
+      "## 1. DTO",
+      "## 2. Repository Interface",
+      "## 3. Repository 구현",
+      "## 4. Service",
+      "## 5. Controller",
+      "## 6. 테스트 케이스",
+      "## 7. Response 코드"
     ],
     "test_spec_path": "src/api/v1/<domain>/test/<feature>.spec.ts"
   }
