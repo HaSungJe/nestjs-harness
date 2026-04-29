@@ -61,7 +61,7 @@ src/
 - **범용·재사용 가능 로직은 반드시 util 로 분리** — 여러 기능에서 공통으로 쓰일 수 있거나, 비즈니스와 무관한 기술적 변환/계산/가공은 service 내부 private 메서드가 아닌 util 로 추출
   - 전역 util: `src/common/utils/*.ts` — 도메인 무관 (예: `bcrypt.ts`, `hash.ts`, `cipher.ts`, `jwt.ts`, `validation.ts`)
   - 도메인 util: `src/api/v1/<domain>/<domain>.util.ts` — 해당 도메인 전용
-- **private 헬퍼 메서드 금지** — service 내부에 `private xxxUtil()` 식으로 두지 말 것. util 로 빼거나, 아예 로직이 기능 하나에만 필요하면 인라인으로 둔다
+- **private 헬퍼 메서드 금지 및 `<domain>.util.ts` 사용** — service 내부에 `private xxxUtil()` 식으로 두지 말고, `src/api/v1/<domain>/<domain>.util.ts` 파일 내에 함수를 생성해서 import 하여 사용한다 (1개 기능에만 필요한 경우는 인라인 허용)
 - **판단 기준**: "이 함수가 다른 기능에서도 호출될 여지가 있는가?" 또는 "비즈니스 흐름과 독립된 단순 변환/가공인가?" 둘 중 하나라도 YES 면 util
 
 ## 공통 로직 분리 규칙
@@ -155,8 +155,8 @@ src/
 
 ## Error Handling
 
-- **Repository**: 모든 메서드 반드시 try/catch. 실패 시 `throw new InternalServerErrorException({message: '~~에 실패했습니다. 관리자에게 문의해주세요.'})`
-- **Repository insert/update**: errno 1062 추가 처리 — `throw new BadRequestException({message: '중복된 {xx}가 존재합니다.'})`. else 절은 `InternalServerErrorException`
+- **Repository**: 모든 메서드 반드시 try/catch. 실패 시 `throw new InternalServerErrorException({message: '서버에서 오류가 발생했습니다. 관리자에게 문의해주세요.'})` — **모든 repository catch 통일 문구 사용** (도메인별 동사 금지). 이유: 범용 `update(where, entity)` 같은 메서드는 호출 맥락에 따라 의미가 달라져 도메인별 메시지가 모호해짐
+- **Repository insert/update**: errno 1062 추가 처리 — `throw new BadRequestException({message: '중복된 {xx}가 존재합니다.'})`. else 절은 위 통일 메시지로 `InternalServerErrorException`
 - errno 1062 확인: `error.errno === 1062 && error.sqlMessage.indexOf('constraint명') !== -1`
 - 범용 `update` 메서드 사용 시 errno 1062는 service에서 catch하여 처리 (repository가 제약 식별 불가)
 - `createValidationError` — **service에서만** 사용. repository 금지
