@@ -1,4 +1,5 @@
 import { ExecutionContext } from '@nestjs/common';
+import { PATH_METADATA } from '@nestjs/common/constants';
 import { of } from 'rxjs';
 import { ApiLogEntity } from '../api-log.entity';
 import { ApiLogInterceptor } from '../api-log.interceptor';
@@ -8,8 +9,13 @@ import { ApiLogInterceptor } from '../api-log.interceptor';
  *
  * - res.send(body) → capturedBody 저장 후 finish 이벤트 발동 시뮬레이션
  * - listeners 객체에 res.on(event, handler) 등록된 핸들러를 보관 → 테스트에서 trigger
+ * - controllerPath / handlerPath 옵션으로 NestJS 라우트 메타데이터 모킹
  */
-function buildMocks(reqOverrides: any = {}, resOverrides: any = {}) {
+function buildMocks(
+    reqOverrides: any = {},
+    resOverrides: any = {},
+    routeOverrides: {controllerPath?: string | null; handlerPath?: string | null} = {},
+) {
     const listeners: Record<string, Function[]> = {};
     const req: any = {
         method: 'GET',
@@ -33,12 +39,22 @@ function buildMocks(reqOverrides: any = {}, resOverrides: any = {}) {
         ...resOverrides,
     };
 
+    // 라우트 메타데이터 모킹 (기본: /api/v1/dept 컨트롤러, 빈 핸들러)
+    const controllerPath = routeOverrides.controllerPath === undefined ? '/api/v1/dept' : routeOverrides.controllerPath;
+    const handlerPath = routeOverrides.handlerPath === undefined ? '/' : routeOverrides.handlerPath;
+    class FakeController {}
+    const fakeHandler = function fakeHandler() {};
+    if (controllerPath !== null) Reflect.defineMetadata(PATH_METADATA, controllerPath, FakeController);
+    if (handlerPath !== null) Reflect.defineMetadata(PATH_METADATA, handlerPath, fakeHandler);
+
     const context: ExecutionContext = {
         getType: () => 'http',
         switchToHttp: () => ({
             getRequest: () => req,
             getResponse: () => res,
         }),
+        getHandler: () => fakeHandler,
+        getClass: () => FakeController,
     } as any;
 
     return {req, res, context, listeners};
@@ -56,13 +72,17 @@ describe('ApiLogInterceptor', () => {
     });
 
     it('[SUCCESS] 정상 응답 — finish 이벤트 시 ApiLogEntity 가 컬럼 값과 함께 insert 됨', async () => {
-        const {req, res, context, listeners} = buildMocks({
-            method: 'POST',
-            originalUrl: '/api/v1/dept?x=1',
-            params: {dept_id: 'd-1'},
-            query: {x: '1'},
-            body: {dept_name: '개발'},
-        });
+        const {req, res, context, listeners} = buildMocks(
+            {
+                method: 'POST',
+                originalUrl: '/api/v1/dept?x=1',
+                params: {dept_id: 'd-1'},
+                query: {x: '1'},
+                body: {dept_name: '개발'},
+            },
+            {},
+            {controllerPath: '/api/v1/dept', handlerPath: '/'},
+        );
 
         const next = {handle: () => of({result: 'ok'})};
         await interceptor.intercept(context, next as any).subscribe();
@@ -79,7 +99,7 @@ describe('ApiLogInterceptor', () => {
         const entity: ApiLogEntity = mockRepo.insert.mock.calls[0][0];
         expect(entity).toBeInstanceOf(ApiLogEntity);
         expect(entity.method).toBe('POST');
-        expect(entity.path).toBe('/api/v1/dept'); // query string 제거됨
+        expect(entity.path).toBe('/api/v1/dept'); // 라우트 패턴 (controllerPath + handlerPath 정규화)
         expect(entity.request_param).toEqual({dept_id: 'd-1'});
         expect(entity.request_query).toEqual({x: '1'});
         expect(entity.request_body).toEqual({dept_name: '개발'});
@@ -90,6 +110,53 @@ describe('ApiLogInterceptor', () => {
         expect(entity.ip).toBe('127.0.0.1');
         expect(entity.user_agent).toBe('jest-test');
         expect(typeof entity.duration_ms).toBe('number');
+    });
+
+    it('[SUCCESS] path — 라우트 패턴(:user_id)을 그대로 저장 (실제 ID 값으로 치환되지 않음)', async () => {
+        const {res, context, listeners} = buildMocks(
+            {
+                method: 'PATCH',
+                originalUrl: '/api/v1/user/admin/ec2a62b608424c678e72829b0015f034/password',
+                params: {user_id: 'ec2a62b608424c678e72829b0015f034'},
+                body: {new_password: 'X'},
+            },
+            {},
+            {controllerPath: '/api/v1/user', handlerPath: '/admin/:user_id/password'},
+        );
+
+        const next = {handle: () => of(null)};
+        await interceptor.intercept(context, next as any).subscribe();
+
+        res.statusCode = 204;
+        res.send('');
+        listeners['finish'][0]();
+        await flushPromises();
+
+        const entity: ApiLogEntity = mockRepo.insert.mock.calls[0][0];
+        expect(entity.path).toBe('/api/v1/user/admin/:user_id/password');
+        // 실제 ID 값은 request_param 으로만 보존
+        expect(entity.request_param).toEqual({user_id: 'ec2a62b608424c678e72829b0015f034'});
+    });
+
+    it('[SUCCESS] path — 메타데이터 누락 시 originalUrl 로 fallback', async () => {
+        const {res, context, listeners} = buildMocks(
+            {
+                method: 'GET',
+                originalUrl: '/api/v1/foo/bar?x=1',
+            },
+            {},
+            {controllerPath: null, handlerPath: null},
+        );
+
+        const next = {handle: () => of(null)};
+        await interceptor.intercept(context, next as any).subscribe();
+
+        res.send('');
+        listeners['finish'][0]();
+        await flushPromises();
+
+        const entity: ApiLogEntity = mockRepo.insert.mock.calls[0][0];
+        expect(entity.path).toBe('/api/v1/foo/bar'); // query string 제거된 originalUrl
     });
 
     it('[SUCCESS] 빈 객체는 null 로 정규화 (params/query/body)', async () => {
