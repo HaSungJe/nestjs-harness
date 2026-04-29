@@ -31,24 +31,36 @@ async someMethod(...): Promise<...> {
 }
 ```
 
-### insert / update — errno 1062 추가 처리
+### insert / update — errno 1062 (UK 중복) + errno 1452 (FK 위반) 모두 처리
 
 ```ts
 async insert(entity: XxxEntity): Promise<void> {
     try {
         await this.repository.insert(entity);
     } catch (error) {
-        if (error.errno === 1062 && error.sqlMessage.indexOf('Unique_Xxx_yyy') !== -1) {
-            throw new BadRequestException({message: '중복된 {xx}가 존재합니다.'});
+        // 1) UK constraint 별로 모두 — entity 의 @Unique 마다 1개씩
+        if (error.errno === 1062 && error.sqlMessage.indexOf('UK_Xxx_yyy') !== -1) {
+            throw new BadRequestException({message: '중복된 {yy}가 존재합니다.'});
         }
+        // 2) FK constraint 별로 모두 — entity 의 @JoinColumn({foreignKeyConstraintName}) 마다 1개씩
+        if (error.errno === 1452 && error.sqlMessage.indexOf('FK_Xxx_Foo') !== -1) {
+            throw new BadRequestException({message: '존재하지 않는 {foo}입니다.'});
+        }
+        if (error.errno === 1452 && error.sqlMessage.indexOf('FK_Xxx_Bar') !== -1) {
+            throw new BadRequestException({message: '존재하지 않는 {bar}입니다.'});
+        }
+        // 3) 그 외는 통일 메시지
         throw new InternalServerErrorException({message: '서버에서 오류가 발생했습니다. 관리자에게 문의해주세요.'});
     }
 }
 ```
 
-- constraint 별로 `if` 분기 추가. 마지막은 항상 `InternalServerErrorException`
-- errno 1062 확인: `error.errno === 1062 && error.sqlMessage.indexOf('constraint명') !== -1`
-- 범용 `update` 메서드에서는 constraint 식별 불가 → errno 1062 처리를 **service**로 위임
+- **모든 UK 와 FK 마다 if 분기 1개씩 강제** — entity 정의를 보고 빠짐없이 추가
+  - UK: `@Unique('UK_xxx_yyy', [...])` 의 첫 번째 인자 (constraint 이름) 로 매칭
+  - FK: `@JoinColumn({foreignKeyConstraintName: 'FK_xxx_yyy'})` 의 값으로 매칭
+- 마지막 else 는 항상 `InternalServerErrorException` (통일 메시지)
+- errno 확인: `error.errno === 1062 && error.sqlMessage.indexOf('constraint명') !== -1` (1452 동일)
+- 범용 `update` 메서드에서는 constraint 식별 불가 → 1062/1452 처리를 **service**로 위임
 
 ## Service throw 패턴
 
