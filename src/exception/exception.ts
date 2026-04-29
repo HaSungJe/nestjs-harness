@@ -1,13 +1,20 @@
 import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Catch(Error)
 export class CustomErrorFilter implements ExceptionFilter {
     catch(exception: Error, host: ArgumentsHost) {
+        const ctx = host.switchToHttp();
+        const request = ctx.getRequest<Request>();
+        const response = ctx.getResponse<Response>();
+
+        // unhandled 예외의 stack trace 를 request 에 attach — ApiLogInterceptor 가 finish 시점에 읽음
+        if (exception?.stack && !exception['response']) {
+            (request as any).__apiLogErrorStack = exception.stack;
+        }
+
         // 413
         if (exception.message && exception.message.includes('request entity too large')) {
-            const ctx = host.switchToHttp();
-            const response = ctx.getResponse<Response>();
             const errorResponse = {
                 code: 'DATA_TO_LARGE',
                 message: `한 요청당 제한된 크기를 초과하였습니다. [최대 15Mb]`,
@@ -17,8 +24,6 @@ export class CustomErrorFilter implements ExceptionFilter {
         }
 
         // 다른 예외 처리
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
         if (exception['response']) {
             return response.status(exception['status']).send(exception['response']);
         } else {

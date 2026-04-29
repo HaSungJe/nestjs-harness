@@ -2,6 +2,7 @@ import { addTransactionalDataSource, initializeTransactionalContext } from 'type
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CustomErrorFilter } from './exception/exception';
+import { ApiLogInterceptor } from './modules/api-log/api-log.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
@@ -64,6 +65,9 @@ async function bootstrap() {
     app.use(bodyParser.json({ limit }));
     app.use(bodyParser.urlencoded({ limit, extended: true }));
     app.useGlobalFilters(new CustomErrorFilter());
+
+    // API 호출 자동 로깅 — 모든 요청/응답을 t_api_log 에 저장
+    app.useGlobalInterceptors(app.get(ApiLogInterceptor));
 
     // 기본 템플릿 ejs 설정. 운영환경에서는 public과 views의 경로를 한 번 더 상위로 이동
     app.useStaticAssets(path.resolve(__dirname, process.env.NODE_ENV === 'development' ? '../../public' : '../../../public'));
