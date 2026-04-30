@@ -146,7 +146,7 @@ src/
 - Pagination 객체명은 항상 `pagination`
 - Pagination 생성 시 `all_search_yn` 반드시 포함:
   ```typescript
-  const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, pageSize: dto.pageSize, all_search_yn: dto.all_search_yn});
+  const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, page_size: dto.page_size, all_search_yn: dto.all_search_yn});
   ```
 
 ## Query DTO 생성자 규칙
@@ -158,7 +158,7 @@ src/
   this.all_search_yn = ['Y', 'N'].includes(data['all_search_yn']) ? data['all_search_yn'] : 'N';
   this.page = !isNaN(parseInt(data['page'])) ? parseInt(data['page']) : 1;
   this.size = !isNaN(parseInt(data['size'])) ? parseInt(data['size']) : 20;
-  this.pageSize = !isNaN(parseInt(data['pageSize'])) ? parseInt(data['pageSize']) : 10;
+  this.page_size = !isNaN(parseInt(data['page_size'])) ? parseInt(data['page_size']) : 10;
   ```
 
 → 상세: [docs/repository.md](docs/repository.md)

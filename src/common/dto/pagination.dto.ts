@@ -3,7 +3,7 @@ import { ApiProperty } from "@nestjs/swagger";
 /**
  * 페이지탭에 표시될 페이지목록의 범위
  */
-class PageRangeResultDto {
+class page_rangeResultDto {
     @ApiProperty({description: '시작값', required: true})
     start: number;
 
@@ -25,10 +25,10 @@ export class PaginationResultDto {
     page: number;
 
     @ApiProperty({description: '최대 페이지', required: true})
-    maxPage: number;
+    max_page: number;
 
-    @ApiProperty({description: '페이지탭에 표시될 페이지목록의 범위', type: () => PageRangeResultDto, required: true})
-    pageRange: PageRangeResultDto;
+    @ApiProperty({description: '페이지탭에 표시될 페이지목록의 범위', type: () => page_rangeResultDto, required: true})
+    page_range: page_rangeResultDto;
 
     @ApiProperty({description: '컨텐츠에 표시할 번호 시작값', required: true})
     content_start_number: number;
@@ -51,5 +51,5 @@ export class PaginationDto {
     size: number;
 
     @ApiProperty({description: '페이지탭에 출력될 페이지의 수. 기본값: 10', required: false})
-    pageSize: number;
+    page_size: number;
 }

@@ -84,7 +84,7 @@ async getVisitRoundList(@Query() query: VisitRoundListDto): Promise<VisitRoundLi
 ```ts
 const total_count = await this.repository.getVisitRoundCount(null);
 const count = await this.repository.getVisitRoundCount(dto);
-const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, pageSize: dto.pageSize, all_search_yn: dto.all_search_yn});
+const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, page_size: dto.page_size, all_search_yn: dto.all_search_yn});
 const entities = await this.repository.getVisitRoundList(dto, pagination.limit, pagination.offset);
 
 return {list, total_count, pagination: pagination.getPagination()};
