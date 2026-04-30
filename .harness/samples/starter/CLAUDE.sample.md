@@ -142,11 +142,11 @@ src/
 ## Pagination
 
 - Query 파라미터: 컨트롤러에서 `new XxxDto(query)` 생성 후 전달
-- 서비스 4단계: `totalCount(null)` → `count(dto)` → `Pagination(count)` → list
+- 서비스 4단계: `total_count(null)` → `count(dto)` → `Pagination(count)` → list
 - Pagination 객체명은 항상 `pagination`
 - Pagination 생성 시 `all_search_yn` 반드시 포함:
   ```typescript
-  const pagination = new Pagination({totalCount: count, page: dto.page, size: dto.size, pageSize: dto.pageSize, all_search_yn: dto.all_search_yn});
+  const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, pageSize: dto.pageSize, all_search_yn: dto.all_search_yn});
   ```
 
 ## Query DTO 생성자 규칙

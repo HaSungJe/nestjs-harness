@@ -19,7 +19,7 @@ export class PaginationResultDto {
     all_search_yn: string;
 
     @ApiProperty({description: '총 개수', required: true})
-    totalCount: number;
+    total_count: number;
 
     @ApiProperty({description: '현재 페이지', required: true})
     page: number;

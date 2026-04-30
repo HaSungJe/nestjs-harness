@@ -7,7 +7,7 @@ export class Pagination {
     public all_search_yn: string = 'N'; // 전체검색 여부(Y/N)
     public size: number; // 페이지당 출력될 데이터 수
     public pageSize: number; // 페이지탭에 출력될 페이지의 수
-    public totalCount: number; // 총 게시글 수
+    public total_count: number; // 총 게시글 수
     public page: number; // 현재 페이지
     public maxPage: number; // 마지막 페이지
     public pageRange: any; // 페이지탭에 출력될 페이지의 시작과 끝 값
@@ -16,7 +16,7 @@ export class Pagination {
 
     constructor(data: any = {}) {
         this.all_search_yn = ['Y', 'N'].includes(data['all_search_yn']) ? data['all_search_yn'] : 'N';
-        this.totalCount = !isNaN(parseInt(data['totalCount'])) ? parseInt(data['totalCount']) : 1;
+        this.total_count = !isNaN(parseInt(data['total_count'])) ? parseInt(data['total_count']) : 1;
         this.page = !isNaN(parseInt(data['page'])) ? parseInt(data['page']) : 1;
         this.size = !isNaN(parseInt(data['size'])) ? parseInt(data['size']) : 20;
         this.pageSize = !isNaN(parseInt(data['pageSize'])) ? parseInt(data['pageSize']) : 10;
@@ -27,8 +27,8 @@ export class Pagination {
         }
 
         // 최대 페이지 수
-        this.maxPage = Math.floor(this.totalCount / this.size);
-        if (this.totalCount % this.size > 0) {
+        this.maxPage = Math.floor(this.total_count / this.size);
+        if (this.total_count % this.size > 0) {
             this.maxPage++;
         }
 
@@ -36,7 +36,7 @@ export class Pagination {
         if (this.all_search_yn === 'Y') {
             this.page = 1;
             this.maxPage = 1;
-            this.size = this.totalCount;
+            this.size = this.total_count;
         }
 
         // 총 개수가 0일 경우, 최대페이지를 기본 1로 설정.
@@ -71,11 +71,11 @@ export class Pagination {
     getPagination(): PaginationResultDto {
         return {
             all_search_yn: this.all_search_yn,
-            totalCount: this.totalCount,
+            total_count: this.total_count,
             page: this.page,
             maxPage: this.maxPage,
             pageRange: this.pageRange,
-            content_start_number: this.totalCount - (this.page - 1) * this.size,
+            content_start_number: this.total_count - (this.page - 1) * this.size,
             content_start_number_reverse: 1 + (this.page - 1) * this.size,
         };
     }
