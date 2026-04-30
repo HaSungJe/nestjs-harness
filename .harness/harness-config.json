@@ -8,7 +8,7 @@
       "api_path",
       "affected_tables"
     ],
-    "step_5_fail_retry_limit": 10,
+    "self_heal_retry_limit": 10,
     "enforced_docs": [
       "docs/architecture.md",
       "docs/entity.md",
@@ -27,6 +27,7 @@
       "## 6. 테스트 케이스",
       "## 7. Response 코드"
     ],
-    "test_spec_path": "src/api/v1/<domain>/test/<feature>.spec.ts"
+    "test_spec_path": "src/api/v1/<domain>/test/<feature>.spec.ts",
+    "step_5_fail_retry_limit": 10
   }
 }

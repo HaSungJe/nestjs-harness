@@ -36,11 +36,11 @@
 3. `git checkout -b <feature브랜치>` 실행
 4. **state 파일 갱신** — `.harness/.auto-branch-state.json` 에 `{"<feature브랜치>": "<base>"}` 항목 추가
    - 파일이 없으면 `{}` 로 생성 후 추가
-   - 항목은 push 가 정상 완료되면 자동 삭제됨 ([push/index.md](../push/index.md) 참고)
+   - 항목은 push 가 정상 완료되면 자동 삭제됨 ([git-push/index.md](../git-push/index.md) 참고)
 5. 이후 ② 단계 진입 — request.md 는 새 feature 브랜치 위에서 작성됨
 
 ### 사용자가 "아니오" 인 경우
-브랜치 변경 없이 현재 브랜치에서 그대로 ② 단계 진입. 푸쉬 시점엔 [push/index.md](../push/index.md) 의 "일반 푸쉬" 절차 적용.
+브랜치 변경 없이 현재 브랜치에서 그대로 ② 단계 진입. 푸쉬 시점엔 [git-push/index.md](../git-push/index.md) 의 "일반 푸쉬" 절차 적용.
 
 ### state 파일 형식
 - 위치: `.harness/.auto-branch-state.json` (gitignore 됨, 세션 로컬)

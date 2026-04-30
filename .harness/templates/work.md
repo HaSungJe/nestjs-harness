@@ -16,7 +16,7 @@
 ## 사전 구현 필요 항목
 
 <!-- 예시 (없으면 섹션 삭제):
-- [ ] BullMQ Queue 인프라 — src/modules/queue/ 에 QueueModule + @UseQueue 데코레이터 + write-queue.registry 생성 (CLAUDE.md 'BullMQ' 섹션 기준)
+- [ ] 큐 인프라 — src/modules/queue/ 에 QueueModule + 데코레이터 + registry 생성 (CLAUDE.md 큐 관련 섹션 기준)
 - [ ] 공용 Audit Util — src/common/utils/audit.ts 생성 (CLAUDE.md 'Service 계층 규칙' 중 util 분리 기준)
 -->
 

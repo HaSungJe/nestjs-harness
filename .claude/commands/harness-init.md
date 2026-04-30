@@ -28,7 +28,7 @@ description: 하네스 샘플을 템플릿 삼아 프로젝트 루트에 CLAUDE.
 ### ④ 생성 방침
 
 - **샘플과 동일 섹션 구조 유지**: `## 플러그인 설정`, `## Architecture`, `## Service 계층 규칙`, `## Naming Conventions`, `## Repository`, `## Entity`, `## Error Handling`, `## Swagger`, `## Auth`, `## Checklist` 등
-- **이 프로젝트가 실제로 쓰지 않는 섹션은 제외** (예: BullMQ 를 안 쓰면 큐 섹션 생략, JWT 가 없으면 Auth 섹션 축약)
+- **이 프로젝트가 실제로 쓰지 않는 섹션은 제외** (예: 큐 솔루션 미사용이면 큐 섹션 생략, 인증 방식이 다르면 Auth 섹션을 실제 방식으로 치환)
 - **샘플의 구체 값은 프로젝트 실상으로 치환**
   - 샘플: `@UseQueue('user-consumer', ...)` → 이 프로젝트가 다른 큐 솔루션이면 해당 규약
   - 샘플 경로 `src/api/v1/<domain>/` → 이 프로젝트의 실제 경로

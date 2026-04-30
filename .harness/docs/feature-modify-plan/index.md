@@ -1,0 +1,87 @@
+# 기능 수정 — 변경요청 단계 (change.md 작성)
+
+기존에 만들어진 기능에 대한 **변경요청 단계** — 영향 범위 분석 후 회차별 `change-<YYMMDD>-<N>.md` 문서를 작성한다. 한국어 키워드 `<featureName> 기능 수정` 또는 슬래시 `/feature-modify-plan` 으로 진입.
+
+이후 구현·테스트·리포트 추기는 다음 명령으로 진행:
+- 한국어: `<featureName> 수정 시작`
+- 슬래시: `/feature-modify-implement`
+- 상세: [../feature-modify-implement/index.md](../feature-modify-implement/index.md)
+
+## 전체 단계 개요 (참고)
+
+```
+─── 변경요청 단계 (이 문서) ───
+① 사람 → "xxx 기능 수정" + 변경사항 구두 설명
+①.5 Claude → 전제 검증 (원본 work.md / report.md 존재 확인)
+①.6 Claude → 브랜치 분기 질의 (feature-plan 패턴 재사용)
+② Claude → 기존 request/work/report 읽고 영향 범위 파악
+③ Claude → change-<YYMMDD>-<N>.md 초안 작성
+           (모호한 결정사항 있으면 "확정 설계 결정사항" 섹션에 [ ] 로 나열)
+④ 사람 → change 파일 검토 + 결정사항 답변 → "xxx 수정 시작"
+
+─── 구현 단계 (feature-modify-implement) ───
+⑤ Claude → 전제 재검증 (change.md 존재 + 결정사항 답변 완료)
+⑥ Claude → 구현 + spec 수정/추가
+⑦ Claude → 테스트 실행 → 자가 수복 (최대 10회)
+⑧ Claude → 기존 report.md 끝에 "## 수정 - <YYMMDD>-<N>" 섹션 추가
+```
+
+---
+
+## ⚠️ ① 단계 전제 조건 (필수 사전 검증)
+
+`xxx 기능 수정` 명령을 받으면 change.md 작성 **전에** 아래를 순서대로 확인:
+
+1. **원본 work.md 존재 여부** — `.harness/output/work/<domain>/<featureName>-work.md` 가 실제로 존재하는가?
+   - 존재하지 않으면 **즉시 중단** 하고 안내:
+     > "해당 기능의 work 파일이 없습니다. 기존에 만들어진 기능이 아닙니다. `<featureName> 기능 생성` 으로 신규 생성하세요."
+2. **원본 report.md 존재 여부** — `.harness/output/report/<domain>/<featureName>-report.md` 가 존재하는가?
+   - 존재하지 않으면 **즉시 중단** 하고 안내:
+     > "해당 기능의 report 파일이 없습니다. 구현이 완료되지 않은 기능에 대한 수정은 `xxx 작업 시작` 으로 처리하세요."
+
+전제 위반이면 ① 단계 이하 진입 금지.
+
+## ①.6 브랜치 분기 질의
+
+전제 검증 통과 후 change.md 작성 **직전** 에 사용자에게 다음을 질의:
+
+> "이 수정 작업을 위한 새 작업 브랜치를 만들까요? (예 / 아니오)
+>  - 예 → `feature/<domain>-<랜덤6>` 브랜치 생성 후 그 위에서 진행. 푸쉬 시 자동으로 현재 브랜치(`<base>`) 로 머지.
+>  - 아니오 → 현재 브랜치(`<base>`) 에서 그대로 진행. 푸쉬 시 일반 절차."
+
+분기 처리 절차는 **feature-plan 의 [브랜치 자동화] 규칙을 그대로 재사용** — [../feature-plan/index.md](../feature-plan/index.md) 의 "브랜치 자동화" 섹션 참고. state 파일(`.harness/.auto-branch-state.json`) 갱신·푸쉬 시 머지 동작 모두 동일.
+
+## ② 단계 — 영향 범위 파악
+
+다음 파일을 읽어 변경요청이 닿는 범위를 식별:
+
+- `.harness/output/request/<domain>/<featureName>-request.md`
+- `.harness/output/work/<domain>/<featureName>-work.md`
+- `.harness/output/report/<domain>/<featureName>-report.md`
+- 같은 도메인 내 이전 회차 change 파일 (있을 경우)
+
+식별 시 확인 항목:
+- 어떤 DTO / Repository 메서드 / Service 메서드 / Controller 엔드포인트가 영향받는지
+- `affected_tables` 가 바뀌는지 (duplicate 테스트 케이스 수에 영향)
+- 새 service throw 분기 / repository catch 블록이 추가되는지
+- 응답 코드가 바뀌는지
+
+## ③ 단계 — change 파일 초안 작성
+
+- 템플릿: `.harness/templates/change.md`
+- 저장 위치: `.harness/output/change/<domain>/<featureName>-change-<YYMMDD>-<N>.md`
+- 파일 작성 규칙 상세 → [change-file.md](./change-file.md)
+- "확정 설계 결정사항" 작성 가이드는 feature-plan 의 [design-decisions.md](../feature-plan/design-decisions.md) 와 동일
+
+## ④ 단계 — 사용자 검토 + 다음 단계 진입
+
+사용자가 change 파일 검토 + "확정 설계 결정사항" 답변 후, `xxx 수정 시작` 또는 `/feature-modify-implement` 로 구현 단계 진입.
+
+---
+
+## 관련 규칙
+
+- change 파일 작성 규칙 → [change-file.md](./change-file.md)
+- 확정 설계 결정사항 작성 가이드 → [../feature-plan/design-decisions.md](../feature-plan/design-decisions.md)
+- 브랜치 자동화 (state 파일 형식·푸쉬 동작) → [../feature-plan/index.md](../feature-plan/index.md) 의 "브랜치 자동화" 섹션
+- 구현 단계 (다음) → [../feature-modify-implement/index.md](../feature-modify-implement/index.md)
