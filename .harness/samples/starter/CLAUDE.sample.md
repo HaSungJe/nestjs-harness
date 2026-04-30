@@ -22,18 +22,21 @@
 **1) 한국어 키워드** — 사용자 요청에 아래 키워드가 포함되면 **먼저 `.harness/docs/routing.md` 를 읽고** 그 인덱스를 따라 해당 상세 문서를 읽어 규칙대로 실행한다.
 
 - `도메인 생성` (예: `user 도메인 생성`)
-- `기능 생성` (예: `xxx 기능 생성`) — request/work 기획 단계
-- `작업 시작` (예: `xxx 작업 시작`) — 구현·테스트·리포트 단계
-- `기능 수정` (예: `xxx 기능 수정`) — 기존 기능 변경요청 단계 (change 문서 작성)
-- `수정 시작` (예: `xxx 수정 시작`) — 기존 기능 수정 구현·테스트·리포트 추기 단계
+- `기능 생성` (예: `xxx 기능 생성`) — 신규 request/work 기획 단계
+- `기능 수정` (예: `xxx 기능 수정`) — 기존 기능 변경 기획 단계 (change 문서 작성)
+- `작업 시작` (예: `작업 시작` 또는 `xxx 작업 시작`) — 구현·테스트·리포트 단계 (신규/수정 자동 라우팅, 인자 생략 시 미구현 플랜 자동 탐색)
 - `커밋` (예: `작업내용 커밋해줘`)
 - `푸쉬` (예: `작업내용 푸쉬해줘`)
 
 **2) 슬래시 커맨드** — Claude Code 환경이면 다음 슬래시도 동등하게 동작:
 
-- `/domain-create <domain>` · `/feature-plan <featureName>` · `/feature-implement <featureName>`
-- `/feature-modify-plan <featureName>` · `/feature-modify-implement <featureName>`
+- `/domain-create <domain>` · `/feature-plan <featureName>` · `/feature-modify-plan <featureName>`
+- `/feature-implement` 또는 `/feature-implement <featureName>` — 신규/수정 자동 라우팅. 인자 없이 호출 시 미구현 플랜 자동 탐색
 - `/git-commit` · `/git-push`
+
+**3) 워크플로 패턴 — 멀티 work 한 사이클 누적**
+
+자동 생성된 feature 브랜치 위에서는 `/feature-plan A` → `/feature-plan B` → `/feature-modify-plan C` 식으로 work / change 를 **여러 개 누적**할 수 있다. 두 번째 호출부터는 브랜치 분기 질의가 **자동 생략**됨 (현재 브랜치가 `.harness/.auto-branch-state.json` 의 키로 등록되어 있을 때). 누적된 미구현 플랜은 `/feature-implement` (인자 없이) 호출 시 자동 탐색되어 1건씩 골라 처리 — 한 번에 N건 자동 처리는 안 함 (검수 지점 보장).
 
 `.harness/docs/routing.md` 에서도 해당 항목을 찾지 못하면 하네스 외 요청으로 간주하고 일반 채팅/작업으로 처리한다. 파일 자체가 없으면 무시하고 아래 코드 규칙만 따른다.
 
@@ -136,17 +139,28 @@ src/
 - 복잡한 조인 · 집계 · 페이지네이션은 기능별 메서드 허용 (QueryBuilder 사용 시)
 - 모든 메서드 `try/catch` + `throw error` 필수
 - `findOne` / `find` 시 `loadRelationIds: true` 필수 (FK 컬럼 undefined 방지)
+- **Pagination 메서드는 단일 함수 패턴** — `total_count` / `count` / `pagination` / `list` 를 한 함수 내에서 같은 QueryBuilder 인스턴스를 단계적으로 재사용해 모두 처리. 별도 `getXxxCount` 메서드 만들지 않음 (아래 "Pagination" 섹션 참고)
 
 → 상세: [docs/repository.md](docs/repository.md)
 
 ## Pagination
 
 - Query 파라미터: 컨트롤러에서 `new XxxDto(query)` 생성 후 전달
-- 서비스 4단계: `total_count(null)` → `count(dto)` → `Pagination(count)` → list
+- **Repository 단일 메서드 패턴** — `getXxxList(dto)` 하나가 `{total_count, pagination, list}` 를 묶어 반환. QueryBuilder 1개를 단계적으로 재사용:
+  1. 기본 `join` + 기본 `where` (삭제 여부 등) → `const total_count = await builder.getCount()`
+  2. `dto` 기반 추가 검색 조건 (`andWhere`) → `const count = await builder.getCount()`
+  3. `Pagination` 생성 (`count` 기반)
+  4. `builder.select(...) / .orderBy(...) / .limit(pagination.limit) / .offset(pagination.offset)` 후 `await builder.getMany()`
+  5. `{ total_count, pagination, list }` 반환
 - Pagination 객체명은 항상 `pagination`
 - Pagination 생성 시 `all_search_yn` 반드시 포함:
   ```typescript
   const pagination = new Pagination({total_count: count, page: dto.page, size: dto.size, page_size: dto.page_size, all_search_yn: dto.all_search_yn});
+  ```
+- **Service 호출은 1줄** — repository 가 이미 묶어서 반환하므로 service 는 변환만:
+  ```typescript
+  const { total_count, pagination, list } = await this.repository.getXxxList(dto);
+  return { list, total_count, pagination: pagination.getPagination() };
   ```
 
 ## Query DTO 생성자 규칙
